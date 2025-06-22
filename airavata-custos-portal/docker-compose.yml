@@ -1,0 +1,22 @@
+version: '3.3'
+services:
+  web:
+    image: 'apachecustos/custos-admin-portal:latest'
+    ports:
+      - '443:443'
+    volumes:
+      - /Users/isururanawaka/Documents/Airavata_Repository/airavata-custos-portal/privkey.pem:/etc/nginx/privkey.pem
+      - /Users/isururanawaka/Documents/Airavata_Repository/airavata-custos-portal/fullchain.pem:/etc/nginx/fullchain.pem
+    environment:
+      CUSTOS_CLIENT_ID: ''
+      CUSTOS_CLIENT_SEC: ''
+      CUSTOS_API_URL: 'https://custos.scigap.org/apiserver'
+      CUSTOS_SUPER_CLIENT_ID: ''
+      UNDER_MAINTENANCE: false
+      # TODO: configure DJANGO_ALLOWED_HOSTS for the webserver domain names. A JSON encoded array of strings.
+      # e.g., '["portal.usecustos.org"]'
+      # DJANGO_ALLOWED_HOSTS: ''
+      # TODO: configure DJANGO_SECRET_KEY with a unique-to-deployment secret key. Use
+      #   python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+      # to generate a unique secret key
+      # DJANGO_SECRET_KEY: ''
