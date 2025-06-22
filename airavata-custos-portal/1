@@ -1,0 +1,11 @@
+version: "3.3"
+services:
+  web:
+    image : "apachecustos/custos-demo-gateway-local:latest"
+    ports:
+      - "8080:8080"
+    environment:
+      VUE_APP_CLIENT_ID: 'tenant-id'
+      VUE_APP_CLIENT_SEC: 'tenant-sec'
+      VUE_APP_REDIRECT_URI: 'http://localhost:8080/callback'
+      VUE_APP_CUSTOS_TOKEN_ENDPOINT: 'https://custos.scigap.org/apiserver/identity-management/v1.0.0/token'

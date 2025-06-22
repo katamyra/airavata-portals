@@ -1,0 +1,111 @@
+@import url('https://fonts.iu.edu/style.css?family=BentonSans:regular,bold|BentonSansCond:regular|GeorgiaPro:regular');
+
+$font-family-sans-serif: Avenir, BentonSans Regular, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !default;
+$font-family-monospace: Avenir, BentonSans Regular, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !default;
+$font-family-base: Avenir, BentonSans Regular, $font-family-sans-serif !default;
+
+$primary: #EA6A0A;
+//$primary: #9a0002;
+//$secondary: $gray-600 !default;
+$success: #CDF0C2 !default;
+//$info: $cyan !default;
+$warning: #FFCF4B !default;
+//$danger: $red !default;
+$light: #F9F9F9 !default;
+//$dark: $gray-800 !default;
+
+
+//$table-cell-padding:          .75rem !default;
+$table-cell-padding-sm: .6rem !default;
+//
+//$table-color:                 $body-color !default;
+$table-bg: transparent !default;
+//$table-accent-bg:             rgba($black, .05) !default;
+//$table-hover-color:           $table-color !default;
+//$table-hover-bg:              rgba($black, .075) !default;
+//$table-active-bg:             $table-hover-bg !default;
+
+//$table-border-width: $border-width !default;
+$table-border-color: white !default;
+
+
+$table-thead-border-color: black !default;
+
+//$table-head-bg:               white !default;
+//$table-head-color:            $gray-700 !default;
+$table-th-font-weight: null !default;
+
+//$table-dark-color:            $white !default;
+//$table-dark-bg:               $gray-800 !default;
+//$table-dark-accent-bg:        rgba($white, .05) !default;
+//$table-dark-hover-color:      $table-dark-color !default;
+//$table-dark-hover-bg:         rgba($white, .075) !default;
+//$table-dark-border-color:     lighten($table-dark-bg, 7.5%) !default;
+
+//$table-striped-order:         odd !default;
+
+//$table-caption-color:         $text-muted !default;
+
+//$table-bg-level:              -9 !default;
+//$table-border-level:          -6 !default;
+
+//$nav-tabs-border-color:             $gray-300 !default;
+$nav-tabs-border-width: 0px !default;
+$nav-tabs-border-radius: 0px !default;
+$nav-tabs-link-hover-border-color: #707070 !default;
+//$nav-tabs-link-active-color: red !default;
+//$nav-tabs-link-active-bg:           $body-bg !default;
+$nav-tabs-link-active-border-color: $primary !default;
+
+.nav-tabs .nav-item .nav-link {
+  color: #203A43;
+  border-color: #0B0B0B;
+  font-size: 18px;
+}
+
+
+// Bootstrap and its default variables
+@import '~bootstrap/scss/bootstrap';
+// BootstrapVue and its default variables
+@import '~bootstrap-vue/src/index.scss';
+
+//.table thead tr,
+.table tbody tr {
+  border: 5px solid white;
+}
+
+//.table thead th {
+//  border-bottom: 1px solid $table-thead-border-color;
+//}
+
+.table tbody tr td {
+  background-color: $light;
+}
+
+.table thead th {
+  border-bottom: 1px solid $table-thead-border-color;
+  //background-color: #f7f7f7;
+}
+
+.table {
+  font-size: 0.9rem;
+}
+
+.nav-tabs .nav-item .nav-link {
+  border-bottom-width: 3px;
+  border-top-width: 0px;
+  border-left-width: 0px;
+  border-right-width: 0px;
+
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.btn .btn-primary {
+  padding: 5px 30px;
+}
+
+.form-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
