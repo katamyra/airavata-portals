@@ -6,7 +6,7 @@ The `airavata-portals` repository is a consolidated home for all web-based user 
 
 This repository contains the following sub-projects and templates:
 
-### 🖥️ Portals and SDKs
+### Portals and SDKs
 
 - **airavata-django-portal**  
   The reference web-based user interface for interacting with Airavata services, supporting job submissions, project management, and monitoring.
