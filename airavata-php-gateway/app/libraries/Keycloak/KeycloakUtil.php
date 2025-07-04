@@ -12,7 +12,8 @@ class KeycloakUtil {
         // curl -d client_id=admin-cli -d username=username \
         //   -d "password=password" -d grant_type=password https://149.165.156.62:8443/auth/realms/master/protocol/openid-connect/token
 
-        $r = curl_init($base_endpoint_url . '/realms/' . rawurlencode($realm) . '/protocol/openid-connect/token');
+        $url = $base_endpoint_url . '/realms/' . rawurlencode($realm) . '/protocol/openid-connect/token';
+        $r = curl_init($url);
         curl_setopt($r, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($r, CURLOPT_ENCODING, 1);
         curl_setopt($r, CURLOPT_SSL_VERIFYPEER, $verify_peer);
@@ -29,7 +30,7 @@ class KeycloakUtil {
 
         $response = curl_exec($r);
         if ($response == false) {
-            Log::error("Failed to retrieve API Access Token");
+            Log::error("Failed to retrieve API Access Token! " . $url . " " . curl_error($r));
             die("curl_exec() failed. Error: " . curl_error($r));
         }
 

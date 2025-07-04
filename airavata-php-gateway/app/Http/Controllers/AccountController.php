@@ -140,9 +140,9 @@ class AccountController extends BaseController
 
     public function loginSubmit()
     {
+        Log::debug("loginSubmit", array($_POST));
         if (CommonUtilities::form_submitted()) {
-            $username = strtolower(Input::get("username"));
-
+            $username = strtolower($_POST['username']);
             $password = $_POST['password'];
             $response = Keycloak::authenticate($username, $password);
             if(!isset($response->access_token)){

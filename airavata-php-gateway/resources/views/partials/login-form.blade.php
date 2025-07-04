@@ -28,7 +28,7 @@
         {{{ Session::get("account-created-success") }}}
     </div>
     @endif
-
+    @csrf
     <div class="form-group">
         <label class="sr-only" for="username">Username</label>
         <input type="text" class="form-control" name="username" placeholder="Username" autofocus required>
