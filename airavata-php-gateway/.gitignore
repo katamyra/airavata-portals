@@ -1,4 +1,15 @@
+# Ignore user-specific config
+/config/pga_config.php
+
+# Ignore legacy view and storage directories (no longer used)
+/app/views
+/app/storage
+
+# Ignore compiled and cached files
 /bootstrap/compiled.php
+/bootstrap/cache/*.php
+
+# Ignore vendor and environment files
 /vendor
 composer.phar
 composer.lock
@@ -6,12 +17,20 @@ composer.lock
 .env.php
 .DS_Store
 Thumbs.db
-pga_config.php
 
-/app/storage
-/themes
-
+# Ignore IDE/project files
 .idea
 .iws
 workspace.xml
 tasks.xml
+
+# Ignore logs and storage
+*.log
+/storage
+
+# Ignore environment files
+/.env
+/.env.*
+
+# Ignore themes (if any)
+/themes

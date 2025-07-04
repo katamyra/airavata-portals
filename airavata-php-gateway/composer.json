@@ -4,19 +4,23 @@
     "keywords": ["framework", "laravel"],
     "license": "MIT",
     "require": {
-        "laravel/framework": "4.2.*",
-        "teepluss/theme": "1.*@dev",
-        "phpmailer/phpmailer": "v5.2.*",
+        "php": ">=7.2.0",
+        "laravel/framework": "^8.76",
+        "phpmailer/phpmailer": "^6.0",
         "moon/properties": "0.1",
-        "graham-campbell/markdown": "*"
+        "graham-campbell/markdown": "^13.0",
+        "laravelcollective/html": "^6.2",
+        "fruitcake/laravel-cors": "^3.0"
     },
     "autoload": {
         "classmap": [
-            "app/controllers",
             "app/database/seeds",
             "app/tests/TestCase.php",
             "app/libraries"
-        ]
+        ],
+        "psr-4": {
+            "App\\": "app/"
+        }
     },
     "scripts": {
         "post-install-cmd": [
@@ -32,7 +36,10 @@
         ]
     },
     "config": {
-        "preferred-install": "dist"
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "kylekatarnls/update-helper": true
+        }
     },
     "minimum-stability": "stable"
 }

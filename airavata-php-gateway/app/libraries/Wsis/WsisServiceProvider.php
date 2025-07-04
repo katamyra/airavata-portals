@@ -19,7 +19,7 @@ class WsisServiceProvider extends ServiceProvider {
      */
     public function boot()
     {
-        $this->package('wsis/wsis');
+        // $this->package('wsis/wsis');
     }
 
 	/**
@@ -30,7 +30,7 @@ class WsisServiceProvider extends ServiceProvider {
 	public function register()
 	{
         //registering service provider
-        $this->app['wsis'] = $this->app->share(function($app)
+        $this->app['wsis'] = function($app)
         {
             $wsisConfig = Config::get('pga_config.wsis');
             if( $wsisConfig['tenant-domain'] == "")
@@ -46,7 +46,7 @@ class WsisServiceProvider extends ServiceProvider {
                 $wsisConfig['verify-peer'],
                 $wsisConfig['allow-self-signed-cert']
             );
-        });
+        };
 
         //registering alis
         $this->app->booting(function()

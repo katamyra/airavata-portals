@@ -152,7 +152,7 @@ class Keycloak {
 
         //Parse JSON return object.
         $result = json_decode($response);
-        Log::debug("getOAuthToken response", array($result));
+        Log::debug("getOAuthToken response" . json_encode($result));
 
         return $result;
     }

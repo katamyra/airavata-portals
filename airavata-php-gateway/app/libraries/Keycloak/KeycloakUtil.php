@@ -34,7 +34,11 @@ class KeycloakUtil {
         }
 
         $result = json_decode($response);
-        // Log::debug("API Access Token result", array($result));
-        return $result->access_token;
+        if (isset($result->access_token)) {
+            return $result->access_token;
+        } else {
+            Log::error("Keycloak API did not return access_token. Response: " . json_encode($result));
+            return null;
+        }
     }
 }

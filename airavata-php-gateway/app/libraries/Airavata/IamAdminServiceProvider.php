@@ -26,7 +26,7 @@ class IamAdminServiceProvider extends ServiceProvider {
      */
     public function boot()
     {
-        $this->package('airavata/iam_admin_services');
+        // $this->package('airavata/iamadmin');
     }
 
 	/**
@@ -37,7 +37,7 @@ class IamAdminServiceProvider extends ServiceProvider {
 	public function register()
 	{
         //registering service provider
-        $this->app['iam_admin_services'] = $this->app->share(function($app)
+        $this->app['iam_admin_services'] = function($app)
         {
             try{
                 $transport = new TSocket(
@@ -61,7 +61,7 @@ class IamAdminServiceProvider extends ServiceProvider {
                 return $client;
             else
                 throw new \Exception("Unable to instantiate Airavata IamAdminServices Client");
-        });
+        };
 
         //registering alis
         $this->app->booting(function()
