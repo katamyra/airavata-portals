@@ -25,7 +25,7 @@ class TenantProfileServiceProvider extends ServiceProvider {
      */
     public function boot()
     {
-        $this->package('airavata/tenant_profile_services');
+        // $this->package('airavata/tenantprofile');
     }
 
 	/**
@@ -36,7 +36,7 @@ class TenantProfileServiceProvider extends ServiceProvider {
 	public function register()
 	{
         //registering service provider
-        $this->app['tenant_profile_services'] = $this->app->share(function($app)
+        $this->app['tenant_profile_services'] = function($app)
         {
             try{
                 $transport = new TSocket(
@@ -60,7 +60,7 @@ class TenantProfileServiceProvider extends ServiceProvider {
                 return $client;
             else
                 throw new \Exception("Unable to instantiate Airavata TenantProfileService Client");
-        });
+        };
 
         //registering alis
         $this->app->booting(function()

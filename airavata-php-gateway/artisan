@@ -13,7 +13,7 @@
 |
 */
 
-require __DIR__.'/bootstrap/autoload.php';
+require __DIR__.'/vendor/autoload.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -27,7 +27,7 @@ require __DIR__.'/bootstrap/autoload.php';
 |
 */
 
-$app = require_once __DIR__.'/bootstrap/start.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -41,9 +41,7 @@ $app = require_once __DIR__.'/bootstrap/start.php';
 |
 */
 
-$app->setRequestForConsoleEnvironment();
-
-$artisan = Illuminate\Console\Application::start($app);
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 
 /*
 |--------------------------------------------------------------------------
@@ -56,7 +54,10 @@ $artisan = Illuminate\Console\Application::start($app);
 |
 */
 
-$status = $artisan->run();
+$status = $kernel->handle(
+    $input = new Symfony\Component\Console\Input\ArgvInput,
+    new Symfony\Component\Console\Output\ConsoleOutput
+);
 
 /*
 |--------------------------------------------------------------------------
@@ -69,6 +70,6 @@ $status = $artisan->run();
 |
 */
 
-$app->shutdown();
+$kernel->terminate($input, $status);
 
 exit($status);

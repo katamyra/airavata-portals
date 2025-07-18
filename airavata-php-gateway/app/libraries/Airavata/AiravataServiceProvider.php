@@ -24,7 +24,7 @@ class AiravataServiceProvider extends ServiceProvider {
      */
     public function boot()
     {
-        $this->package('airavata/airavata');
+        // $this->package('airavata/airavata');
     }
 
 	/**
@@ -35,7 +35,7 @@ class AiravataServiceProvider extends ServiceProvider {
 	public function register()
 	{
         //registering service provider
-        $this->app['airavata'] = $this->app->share(function($app)
+        $this->app['airavata'] = function($app)
         {
             try{
                 $transport = new TSocket(
@@ -58,7 +58,7 @@ class AiravataServiceProvider extends ServiceProvider {
                 return $client;
             else
                 throw new \Exception("Unable to instantiate Airavata Client");
-        });
+        };
 
         //registering alis
         $this->app->booting(function()

@@ -19,7 +19,7 @@ class KeycloakServiceProvider extends ServiceProvider {
     */
     public function boot()
     {
-        $this->package('keycloak/keycloak');
+        // $this->package('keycloak/keycloak');
     }
 
     /**
@@ -30,7 +30,7 @@ class KeycloakServiceProvider extends ServiceProvider {
     public function register()
     {
         //registering service provider
-        $this->app['keycloak'] = $this->app->share(function($app)
+        $this->app['keycloak'] = function($app)
         {
             $identityServerConfig = Config::get('pga_config.wsis');
             $airavataConfig = Config::get('pga_config.airavata');
@@ -48,7 +48,7 @@ class KeycloakServiceProvider extends ServiceProvider {
                 $identityServerConfig['admin-password'],
                 $airavataConfig['gateway-id']
             );
-        });
+        };
 
         //registering alis
         $this->app->booting(function()

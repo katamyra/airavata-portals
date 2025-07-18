@@ -25,7 +25,7 @@ class UserProfileServiceProvider extends ServiceProvider {
      */
     public function boot()
     {
-        $this->package('airavata/user_profile_services');
+        // $this->package('airavata/userprofile');
     }
 
 	/**
@@ -36,7 +36,7 @@ class UserProfileServiceProvider extends ServiceProvider {
 	public function register()
 	{
         //registering service provider
-        $this->app['user_profile_services'] = $this->app->share(function($app)
+        $this->app['user_profile_services'] = function($app)
         {
             try{
                 $transport = new TSocket(
@@ -60,7 +60,7 @@ class UserProfileServiceProvider extends ServiceProvider {
                 return $client;
             else
                 throw new \Exception("Unable to instantiate Airavata UserProfileService Client");
-        });
+        };
 
         //registering alis
         $this->app->booting(function()

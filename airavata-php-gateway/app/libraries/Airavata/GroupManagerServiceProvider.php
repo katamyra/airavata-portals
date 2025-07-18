@@ -25,7 +25,7 @@ class GroupManagerServiceProvider extends ServiceProvider {
      */
     public function boot()
     {
-        $this->package('airavata/group_manager_services');
+        // $this->package('airavata/groupmanager');
     }
 
 	/**
@@ -36,7 +36,7 @@ class GroupManagerServiceProvider extends ServiceProvider {
 	public function register()
 	{
         //registering service provider
-        $this->app['group_manager_services'] = $this->app->share(function($app)
+        $this->app['group_manager_services'] = function($app)
         {
             try{
                 $transport = new TSocket(
@@ -60,7 +60,7 @@ class GroupManagerServiceProvider extends ServiceProvider {
                 return $client;
             else
                 throw new \Exception("Unable to instantiate Airavata GroupManagerService Client");
-        });
+        };
 
         //registering alis
         $this->app->booting(function()

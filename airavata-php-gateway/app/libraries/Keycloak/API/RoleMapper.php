@@ -25,7 +25,7 @@ class RoleMapper extends BaseKeycloakAPIEndpoint {
         // get access token for admin API
         $access_token = $this->getAPIAccessToken($realm);
         $url = $this->base_endpoint_url . '/admin/realms/' . rawurlencode($realm) . '/users/' . rawurlencode($user_id) . '/role-mappings/realm';
-        // Log::debug("getRealmRoleMappingsForUser url", array($url));
+        Log::debug("getRealmRoleMappingsForUser url: " . $url);
         $r = curl_init($url);
         curl_setopt($r, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($r, CURLOPT_ENCODING, 1);
@@ -38,13 +38,18 @@ class RoleMapper extends BaseKeycloakAPIEndpoint {
         ));
 
         $response = curl_exec($r);
+        $httpCode = curl_getinfo($r, CURLINFO_HTTP_CODE);
         if ($response == false) {
-            Log::error("Failed to retrieve realm role mappings for user");
+            Log::error("Failed to retrieve realm role mappings for user! GET " . $url . " " . curl_error($r));
             die("curl_exec() failed. Error: " . curl_error($r));
+        } elseif ($httpCode != 200) {
+            Log::error("Failed to retrieve realm role mappings for user! GET " . $url . " " . $httpCode);
+            die("curl_exec() failed. Error: " . $url . " " . $httpCode);
+        } else {
+          $result = json_decode($response);
+          Log::debug("getRealmRoleMappingsForUser result: " . json_encode($result));
+          return $result;
         }
-        $result = json_decode($response);
-        // Log::debug("getRealmRoleMappingsForUser result", array($result));
-        return $result;
     }
 
     /**
