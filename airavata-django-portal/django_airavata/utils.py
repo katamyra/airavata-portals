@@ -1,5 +1,6 @@
 import logging
 import ssl
+from django.conf import settings
 from contextlib import contextmanager
 
 import thrift_connector.connection_pool as connection_pool
@@ -50,7 +51,7 @@ def get_secure_transport(hostname, port):
         hostname,
         port,
         cert_reqs=ssl.CERT_REQUIRED,
-        ca_certs='/etc/ssl/certs/ca-certificates.crt',
+        ca_certs=settings.CA_CERTS_PATH,
     )
     return TTransport.TBufferedTransport(transport)
 
@@ -186,7 +187,7 @@ class CustomThriftClient(connection_pool.ThriftClient):
                     host,
                     port,
                     cert_reqs=ssl.CERT_REQUIRED,
-                    ca_certs='/etc/ssl/certs/ca-certificates.crt',
+                    ca_certs=settings.CA_CERTS_PATH,
                 )
 
             return factory
