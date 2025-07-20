@@ -30,7 +30,7 @@ import ProtectedComponent from "./components/auth/ProtectedComponent";
 import {AuthProvider, AuthProviderProps} from "react-oidc-context";
 import {useEffect, useState} from "react";
 import NavBarFooterLayout from "./layouts/NavBarFooterLayout";
-import {CybershuttleLanding} from "./components/home/CybershuttleLanding";
+import {NewLandingPage} from "./components/home/NewLandingPage";
 import {APP_REDIRECT_URI, CLIENT_ID, OPENID_CONFIG_URL,} from "./lib/constants";
 import {WebStorageStateStore} from "oidc-client-ts";
 import {Resources} from "./components/resources";
@@ -41,6 +41,10 @@ import {AddRepoMaster} from "./components/add/AddRepoMaster";
 import {Add} from "./components/add";
 import {AddProjectMaster} from "./components/add/AddProjectMaster";
 import {StarredResourcesPage} from "@/components/resources/StarredResourcesPage.tsx";
+import {Catalog} from "./components/catalog";
+import {SidebarLayout} from "./layouts/SidebarLayout";
+import {ResourceDetail} from "./components/resources/ResourceDetail";
+import SearchResults from "./components/search/SearchResults";
 
 function App() {
   const colorMode = useColorMode();
@@ -102,22 +106,27 @@ function App() {
           <Toaster/>
           <UserSet/>
           <Routes>
-            {/* Public Route */}
-            <Route element={<NavBarFooterLayout/>}>
-              <Route path="/" element={<CybershuttleLanding/>}/>
-              <Route path="/login" element={<Login/>}/>
+            <Route path="/login" element={<Login/>}/>
+
+            {/* Public Routes with Sidebar Layout */}
+            <Route element={<SidebarLayout/>}>
+              <Route path="/" element={<NewLandingPage/>}/>
               <Route path="/resources" element={<Resources/>}/>
+              <Route path="/resources/storage/:id" element={<ResourceDetail/>}/>
+              <Route path="/resources/compute/:id" element={<ResourceDetail/>}/>
               <Route path="/events" element={<Events/>}/>
               <Route path="/resources/datasets" element={<Datasets/>}/>
               <Route path="/resources/notebooks" element={<Notebooks/>}/>
               <Route path="/resources/repositories" element={<Repositories/>}/>
               <Route path="/resources/models" element={<Models/>}/>
               <Route path="/resources/:type/:id" element={<ResourceDetails/>}/>
+              <Route path="/catalog" element={<Catalog/>}/>
+              <Route path="/search" element={<SearchResults/>}/>
             </Route>
 
-            {/* Protected Routes with Layout */}
+            {/* Protected Routes with Sidebar Layout */}
             <Route
-                element={<ProtectedComponent Component={NavBarFooterLayout}/>}
+                element={<ProtectedComponent Component={SidebarLayout}/>}
             >
               <Route path="/resources/starred" element={<StarredResourcesPage/>}/>
               <Route path="/sessions" element={<Home/>}/>
