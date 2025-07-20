@@ -29,7 +29,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, useLocation } from "react-router";
 import { adminApiService } from "../../lib/adminApi";
 
 interface StorageResource {
@@ -51,11 +51,16 @@ interface ComputeResource {
 }
 
 export const ResourceDetail = () => {
-  const { type, id } = useParams<{ type: string; id: string }>();
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const [resource, setResource] = useState<StorageResource | ComputeResource | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Extract type from URL path
+  const type = location.pathname.includes('/storage/') ? 'storage' : 'compute';
+
 
   useEffect(() => {
     fetchResource();
@@ -72,6 +77,8 @@ export const ResourceDetail = () => {
       } else if (type === "compute" && id) {
         const data = await adminApiService.getComputeResourceById(parseInt(id));
         setResource(data);
+      } else {
+        setError("Invalid resource type or ID");
       }
     } catch (err) {
       console.error("Failed to fetch resource:", err);
@@ -181,7 +188,7 @@ export const ResourceDetail = () => {
                     <Text>{resource.name}</Text>
                   </HStack>
                   
-                  {"storage" in resource ? (
+                  {(resource as any).storage ? (
                     <>
                       <HStack justify="space-between">
                         <Text fontWeight="medium" color="gray.600">Storage:</Text>

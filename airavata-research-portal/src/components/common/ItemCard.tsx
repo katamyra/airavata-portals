@@ -26,6 +26,7 @@ import {
   Flex,
   Spacer,
 } from "@chakra-ui/react";
+import { useNavigate, useLocation } from "react-router";
 
 interface ItemCardProps {
   id: number;
@@ -46,6 +47,22 @@ export const ItemCard = ({
   starCount, 
   onStar 
 }: ItemCardProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleCardClick = () => {
+    // Determine the route based on current path
+    if (location.pathname.includes('/datasets')) {
+      navigate(`/resources/datasets/${id}`);
+    } else if (location.pathname.includes('/models')) {
+      navigate(`/resources/models/${id}`);
+    } else if (location.pathname.includes('/notebooks')) {
+      navigate(`/resources/notebooks/${id}`);
+    } else if (location.pathname.includes('/repositories')) {
+      navigate(`/resources/repositories/${id}`);
+    }
+  };
+
   return (
     <Box
       border="1px solid"
@@ -53,11 +70,12 @@ export const ItemCard = ({
       borderRadius="xl"
       p={4}
       bg="white"
-      _hover={{ borderColor: "gray.300", shadow: "md" }}
+      _hover={{ borderColor: "gray.300", shadow: "md", cursor: "pointer" }}
       h="220px"
       display="flex"
       flexDirection="column"
       m={3}
+      onClick={handleCardClick}
     >
       <VStack align="stretch" spacing={3} flex={1}>
         {/* Header with title and star */}
@@ -68,7 +86,10 @@ export const ItemCard = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onStar(id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onStar(id);
+            }}
             color="gray.400"
             _hover={{ color: "yellow.500" }}
             minW="auto"

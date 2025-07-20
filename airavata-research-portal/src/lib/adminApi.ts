@@ -76,6 +76,11 @@ export const adminApiService = {
     return response.data;
   },
 
+  async createModel(model: any) {
+    const response = await adminApi.post('/models', model);
+    return response.data;
+  },
+
   async starModel(id: number) {
     const response = await adminApi.post(`/models/${id}/star`);
     return response.data;
@@ -102,6 +107,11 @@ export const adminApiService = {
     return response.data;
   },
 
+  async createDataset(dataset: any) {
+    const response = await adminApi.post('/datasets', dataset);
+    return response.data;
+  },
+
   async starDataset(id: number) {
     const response = await adminApi.post(`/datasets/${id}/star`);
     return response.data;
@@ -120,6 +130,11 @@ export const adminApiService = {
 
   async searchNotebooks(keyword: string) {
     const response = await adminApi.get(`/notebooks/search?keyword=${encodeURIComponent(keyword)}`);
+    return response.data;
+  },
+
+  async createNotebook(notebook: any) {
+    const response = await adminApi.post('/notebooks', notebook);
     return response.data;
   },
 
@@ -144,6 +159,11 @@ export const adminApiService = {
     return response.data;
   },
 
+  async createRepository(repository: any) {
+    const response = await adminApi.post('/repositories', repository);
+    return response.data;
+  },
+
   async starRepository(id: number) {
     const response = await adminApi.post(`/repositories/${id}/star`);
     return response.data;
@@ -160,6 +180,16 @@ export const adminApiService = {
     return response.data;
   },
 
+  async createStorageResource(storageResource: any) {
+    const response = await adminApi.post('/storage-resources', storageResource);
+    return response.data;
+  },
+
+  async searchStorageResources(keyword: string) {
+    const response = await adminApi.get(`/storage-resources/search?keyword=${encodeURIComponent(keyword)}`);
+    return response.data;
+  },
+
   // Compute Resources endpoints
   async getComputeResources() {
     const response = await adminApi.get('/compute-resources');
@@ -168,6 +198,16 @@ export const adminApiService = {
 
   async getComputeResourceById(id: number) {
     const response = await adminApi.get(`/compute-resources/${id}`);
+    return response.data;
+  },
+
+  async createComputeResource(computeResource: any) {
+    const response = await adminApi.post('/compute-resources', computeResource);
+    return response.data;
+  },
+
+  async searchComputeResources(keyword: string) {
+    const response = await adminApi.get(`/compute-resources/search?keyword=${encodeURIComponent(keyword)}`);
     return response.data;
   },
 };

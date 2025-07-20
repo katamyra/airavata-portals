@@ -28,6 +28,7 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { adminApiService } from "../../lib/adminApi";
 import { ItemCard } from "../common/ItemCard";
 
@@ -52,6 +53,7 @@ const filterCategories = [
 ];
 
 const Repositories = () => {
+  const navigate = useNavigate();
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -164,6 +166,7 @@ const Repositories = () => {
               leftIcon={<Text>+</Text>}
               _hover={{ bg: "#4a9ce6" }}
               borderRadius="md"
+              onClick={() => navigate("/resources/repositories/new")}
             >
               New Repository
             </Button>

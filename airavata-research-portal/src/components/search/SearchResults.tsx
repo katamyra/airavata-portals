@@ -25,7 +25,7 @@ interface SearchItem {
   authors: string[];
   starCount: number;
   category: string;
-  type: 'model' | 'dataset' | 'notebook' | 'repository';
+  type: 'model' | 'dataset' | 'notebook' | 'repository' | 'compute' | 'storage';
 }
 
 const SearchResults: React.FC = () => {
@@ -48,6 +48,8 @@ const SearchResults: React.FC = () => {
     { key: 'repositories', label: 'Repositories', icon: '📁' },
     { key: 'notebooks', label: 'Notebooks', icon: '📓' },
     { key: 'datasets', label: 'Datasets', icon: '📊' },
+    { key: 'compute', label: 'Compute Resources', icon: '💻' },
+    { key: 'storage', label: 'Storage Resources', icon: '💾' },
     { key: 'authors', label: 'Authors', icon: '👤' }
   ];
 
@@ -80,23 +82,51 @@ const SearchResults: React.FC = () => {
         adminApiService.searchRepositories(query).catch(err => {
           console.error('Repositories search failed:', err);
           return [];
+        }),
+        adminApiService.searchComputeResources(query).catch(err => {
+          console.error('Compute resources search failed:', err);
+          return [];
+        }),
+        adminApiService.searchStorageResources(query).catch(err => {
+          console.error('Storage resources search failed:', err);
+          return [];
         })
       ];
 
-      const [models, datasets, notebooks, repositories] = await Promise.all(promises);
+      const [models, datasets, notebooks, repositories, computeResources, storageResources] = await Promise.all(promises);
 
       console.log('Search results:', {
         models: models.length,
         datasets: datasets.length,
         notebooks: notebooks.length,
-        repositories: repositories.length
+        repositories: repositories.length,
+        computeResources: computeResources.length,
+        storageResources: storageResources.length
       });
 
       const allResults: SearchItem[] = [
         ...models.map((item: any) => ({ ...item, type: 'model' as const })),
         ...datasets.map((item: any) => ({ ...item, type: 'dataset' as const })),
         ...notebooks.map((item: any) => ({ ...item, type: 'notebook' as const })),
-        ...repositories.map((item: any) => ({ ...item, type: 'repository' as const }))
+        ...repositories.map((item: any) => ({ ...item, type: 'repository' as const })),
+        ...computeResources.map((item: any) => ({ 
+          ...item, 
+          type: 'compute' as const,
+          title: item.name,
+          tags: [],
+          authors: [],
+          starCount: 0,
+          category: item.computeType || 'general'
+        })),
+        ...storageResources.map((item: any) => ({ 
+          ...item, 
+          type: 'storage' as const,
+          title: item.name,
+          tags: [],
+          authors: [],
+          starCount: 0,
+          category: item.storageType || 'general'
+        }))
       ];
 
       setSearchResults(allResults);

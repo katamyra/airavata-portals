@@ -28,7 +28,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { adminApiService } from "../../lib/adminApi";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 
 interface StorageResource {
   id: number;
@@ -49,11 +49,14 @@ interface ComputeResource {
 }
 
 export const Resources = () => {
-  const [activeTab, setActiveTab] = useState("storage");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "storage");
   const [storageResources, setStorageResources] = useState([]);
   const [computeResources, setComputeResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [typeFilter, setTypeFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -83,6 +86,39 @@ export const Resources = () => {
   const handleViewResource = (id, type) => {
     navigate(`/resources/${type}/${id}`);
   };
+
+  // Get unique types and statuses for current tab
+  const getFilterOptions = () => {
+    const currentResources = activeTab === "storage" ? storageResources : computeResources;
+    
+    const types = [...new Set(currentResources.map(resource => 
+      activeTab === "storage" ? resource.storageType : resource.computeType
+    ))];
+    
+    const statuses = [...new Set(currentResources.map(resource => resource.status))];
+    
+    return { types, statuses };
+  };
+
+  // Filter resources based on current filters
+  const getFilteredResources = () => {
+    const currentResources = activeTab === "storage" ? storageResources : computeResources;
+    
+    return currentResources.filter(resource => {
+      const typeMatch = typeFilter === "All" || 
+        (activeTab === "storage" ? resource.storageType === typeFilter : resource.computeType === typeFilter);
+      
+      const statusMatch = statusFilter === "All" || resource.status === statusFilter;
+      
+      return typeMatch && statusMatch;
+    });
+  };
+
+  // Reset filters when tab changes
+  useEffect(() => {
+    setTypeFilter("All");
+    setStatusFilter("All");
+  }, [activeTab]);
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -122,7 +158,10 @@ export const Resources = () => {
                 borderBottom={activeTab === "storage" ? "2px solid #60b4f7" : "2px solid transparent"}
                 borderRadius={0}
                 fontWeight="medium"
-                onClick={() => setActiveTab("storage")}
+                onClick={() => {
+                  setActiveTab("storage");
+                  navigate("/resources?tab=storage", { replace: true });
+                }}
                 px={0}
                 mr={8}
               >
@@ -134,7 +173,10 @@ export const Resources = () => {
                 borderBottom={activeTab === "compute" ? "2px solid #60b4f7" : "2px solid transparent"}
                 borderRadius={0}
                 fontWeight="medium"
-                onClick={() => setActiveTab("compute")}
+                onClick={() => {
+                  setActiveTab("compute");
+                  navigate("/resources?tab=compute", { replace: true });
+                }}
                 px={0}
               >
                 Compute
@@ -144,22 +186,92 @@ export const Resources = () => {
 
           {/* Filters and Add Button */}
           <Flex justify="space-between" align="center">
-            <HStack spacing={4}>
+            <VStack align="start" spacing={3}>
               <Text fontSize="sm" fontWeight="medium" color="gray.700">
                 Filters :
               </Text>
-              <Button size="sm" variant="outline" borderColor="gray.300">
-                {activeTab === "storage" ? "Storage Type" : "Compute Type"}
-              </Button>
-              <Button size="sm" variant="outline" borderColor="gray.300">
-                Status
-              </Button>
-            </HStack>
+              
+              {/* Type Filter */}
+              <HStack spacing={2}>
+                <Text fontSize="xs" color="gray.600" minW="60px">
+                  {activeTab === "storage" ? "Storage:" : "Compute:"}
+                </Text>
+                <HStack spacing={2}>
+                  <Button
+                    size="sm"
+                    variant={typeFilter === "All" ? "solid" : "outline"}
+                    bg={typeFilter === "All" ? "black" : "transparent"}
+                    color={typeFilter === "All" ? "white" : "gray.600"}
+                    borderColor="gray.300"
+                    onClick={() => setTypeFilter("All")}
+                    _hover={{ bg: typeFilter === "All" ? "gray.800" : "gray.50" }}
+                  >
+                    All
+                  </Button>
+                  {getFilterOptions().types.map((type) => (
+                    <Button
+                      key={type}
+                      size="sm"
+                      variant={typeFilter === type ? "solid" : "outline"}
+                      bg={typeFilter === type ? "black" : "transparent"}
+                      color={typeFilter === type ? "white" : "gray.600"}
+                      borderColor="gray.300"
+                      onClick={() => setTypeFilter(type)}
+                      _hover={{ bg: typeFilter === type ? "gray.800" : "gray.50" }}
+                    >
+                      {type}
+                    </Button>
+                  ))}
+                </HStack>
+              </HStack>
+
+              {/* Status Filter */}
+              <HStack spacing={2}>
+                <Text fontSize="xs" color="gray.600" minW="60px">
+                  Status:
+                </Text>
+                <HStack spacing={2}>
+                  <Button
+                    size="sm"
+                    variant={statusFilter === "All" ? "solid" : "outline"}
+                    bg={statusFilter === "All" ? "black" : "transparent"}
+                    color={statusFilter === "All" ? "white" : "gray.600"}
+                    borderColor="gray.300"
+                    onClick={() => setStatusFilter("All")}
+                    _hover={{ bg: statusFilter === "All" ? "gray.800" : "gray.50" }}
+                  >
+                    All
+                  </Button>
+                  {getFilterOptions().statuses.map((status) => (
+                    <Button
+                      key={status}
+                      size="sm"
+                      variant={statusFilter === status ? "solid" : "outline"}
+                      bg={statusFilter === status ? "black" : "transparent"}
+                      color={statusFilter === status ? "white" : "gray.600"}
+                      borderColor="gray.300"
+                      onClick={() => setStatusFilter(status)}
+                      _hover={{ bg: statusFilter === status ? "gray.800" : "gray.50" }}
+                    >
+                      {status}
+                    </Button>
+                  ))}
+                </HStack>
+              </HStack>
+            </VStack>
+            
             <Button
               bg="#60b4f7"
               color="white"
               size="md"
               _hover={{ bg: "#4a9ce6" }}
+              onClick={() => {
+                if (activeTab === "compute") {
+                  navigate('/resources/compute/new');
+                } else {
+                  navigate('/resources/storage/new');
+                }
+              }}
             >
               + Add Resource
             </Button>
@@ -212,7 +324,7 @@ export const Resources = () => {
                 </Box>
                 
                 {/* Rows */}
-                {(activeTab === "storage" ? storageResources : computeResources).map((resource, index) => (
+                {getFilteredResources().map((resource, index) => (
                   <Box 
                     key={resource.id} 
                     p={4} 

@@ -45,6 +45,13 @@ import {Catalog} from "./components/catalog";
 import {SidebarLayout} from "./layouts/SidebarLayout";
 import {ResourceDetail} from "./components/resources/ResourceDetail";
 import SearchResults from "./components/search/SearchResults";
+import {AddModelForm} from "./components/models/AddModelForm";
+import {AddDatasetForm} from "./components/datasets/AddDatasetForm";
+import {DatasetDetail} from "./components/datasets/DatasetDetail";
+import {AddComputeResourceForm} from "./components/resources/AddComputeResourceForm";
+import {AddStorageResourceForm} from "./components/resources/AddStorageResourceForm";
+import {AddNotebookForm} from "./components/notebooks/AddNotebookForm";
+import {AddRepositoryForm} from "./components/repositories/AddRepositoryForm";
 
 function App() {
   const colorMode = useColorMode();
@@ -119,7 +126,13 @@ function App() {
               <Route path="/resources/notebooks" element={<Notebooks/>}/>
               <Route path="/resources/repositories" element={<Repositories/>}/>
               <Route path="/resources/models" element={<Models/>}/>
-              <Route path="/resources/:type/:id" element={<ResourceDetails/>}/>
+              <Route path="/resources/models/new" element={<AddModelForm/>}/>
+              <Route path="/resources/datasets/new" element={<AddDatasetForm/>}/>
+              <Route path="/resources/datasets/:id" element={<DatasetDetail/>}/>
+              <Route path="/resources/compute/new" element={<AddComputeResourceForm/>}/>
+              <Route path="/resources/storage/new" element={<AddStorageResourceForm/>}/>
+              <Route path="/resources/notebooks/new" element={<AddNotebookForm/>}/>
+              <Route path="/resources/repositories/new" element={<AddRepositoryForm/>}/>
               <Route path="/catalog" element={<Catalog/>}/>
               <Route path="/search" element={<SearchResults/>}/>
             </Route>
