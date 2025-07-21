@@ -22,7 +22,7 @@ import { Box, VStack, HStack, Text, Button, Badge } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router';
 import { adminApiService } from '../../lib/adminApi';
 
-interface Dataset {
+interface Repository {
   id: number;
   title: string;
   description: string;
@@ -32,28 +32,28 @@ interface Dataset {
   category: string;
 }
 
-export const DatasetDetail = () => {
+export const RepositoryDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [dataset, setDataset] = useState<Dataset | null>(null);
+  const [repository, setRepository] = useState<Repository | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
-      fetchDataset(parseInt(id));
+      fetchRepository(parseInt(id));
     }
   }, [id]);
 
-  const fetchDataset = async (datasetId: number) => {
+  const fetchRepository = async (repositoryId: number) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await adminApiService.getDatasetById(datasetId);
-      setDataset(data);
+      const data = await adminApiService.getRepositoryById(repositoryId);
+      setRepository(data);
     } catch (err) {
-      console.error('Failed to fetch dataset:', err);
-      setError('Failed to load dataset');
+      console.error('Failed to fetch repository:', err);
+      setError('Failed to load repository');
     } finally {
       setLoading(false);
     }
@@ -62,18 +62,24 @@ export const DatasetDetail = () => {
   if (loading) {
     return (
       <Box bg="gray.50" minH="100vh" p={8}>
-        <Text>Loading dataset...</Text>
+        <Text>Loading repository...</Text>
       </Box>
     );
   }
 
-  if (error || !dataset) {
+  if (error || !repository) {
     return (
       <Box bg="gray.50" minH="100vh" p={8}>
         <VStack spacing={4}>
-          <Text color="red.500">{error || 'Dataset not found'}</Text>
-          <Button onClick={() => navigate('/resources/datasets')}>
-            ← Back to Datasets
+          <Text color="red.500">{error || 'Repository not found'}</Text>
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/resources/repositories')}
+            color="gray.600"
+            size="sm"
+            leftIcon={<Text>←</Text>}
+          >
+            Back to Repositories
           </Button>
         </VStack>
       </Box>
@@ -86,7 +92,7 @@ export const DatasetDetail = () => {
         <HStack w="full" justify="space-between" align="center">
           <Button
             variant="ghost"
-            onClick={() => navigate('/resources/datasets')}
+            onClick={() => navigate('/resources/repositories')}
             color="gray.600"
             size="sm"
             leftIcon={<Text>←</Text>}
@@ -95,7 +101,7 @@ export const DatasetDetail = () => {
           </Button>
           <HStack spacing={2}>
             <Button size="sm" variant="outline">
-              Star {dataset.starCount}
+              Star {repository.starCount}
             </Button>
             <Button size="sm" variant="outline">
               Fork
@@ -108,16 +114,16 @@ export const DatasetDetail = () => {
             {/* Header */}
             <VStack align="start" spacing={2} w="full">
               <Text fontSize="3xl" fontWeight="bold">
-                {dataset.title}
+                {repository.title}
               </Text>
               <Text color="gray.600" fontSize="lg">
-                {dataset.description}
+                {repository.description}
               </Text>
             </VStack>
 
             {/* Tags */}
             <HStack spacing={2} wrap="wrap">
-              {dataset.tags.map((tag) => (
+              {repository.tags.map((tag) => (
                 <Badge key={tag} colorScheme="blue" variant="subtle">
                   {tag}
                 </Badge>
@@ -128,7 +134,7 @@ export const DatasetDetail = () => {
             <VStack align="start" spacing={2}>
               <Text fontWeight="medium">Authors:</Text>
               <VStack align="start" spacing={1}>
-                {dataset.authors.map((author) => (
+                {repository.authors.map((author) => (
                   <Text key={author} color="gray.600">
                     {author}
                   </Text>
@@ -137,7 +143,7 @@ export const DatasetDetail = () => {
             </VStack>
 
             <VStack align="start" spacing={3} w="full">
-              <Text fontWeight="medium">Dataset Information</Text>
+              <Text fontWeight="medium">Repository Information</Text>
               <Box 
                 bg="gray.50" 
                 p={4} 
@@ -147,20 +153,20 @@ export const DatasetDetail = () => {
                 borderColor="gray.200"
               >
                 <Text fontSize="sm" color="gray.600">
-                  Category: {dataset.category}
+                  Category: {repository.category}
                 </Text>
                 <Text fontSize="sm" color="gray.600">
-                  Stars: {dataset.starCount}
+                  Stars: {repository.starCount}
                 </Text>
               </Box>
             </VStack>
 
             <HStack spacing={4} pt={4}>
               <Button bg="blue.500" color="white" _hover={{ bg: "blue.600" }}>
-                Start Session
+                Clone Repository
               </Button>
               <Button variant="outline">
-                Download
+                Download ZIP
               </Button>
             </HStack>
           </VStack>

@@ -27,6 +27,9 @@ import {
   Spacer,
 } from "@chakra-ui/react";
 import { useNavigate, useLocation } from "react-router";
+import { useAuth } from "react-oidc-context";
+import { useState, useEffect } from "react";
+import { toaster } from "@/components/ui/toaster";
 
 interface ItemCardProps {
   id: number;
@@ -35,7 +38,7 @@ interface ItemCardProps {
   tags: string[];
   authors: string[];
   starCount: number;
-  onStar: (id: number) => void;
+  onStar?: (id: number) => void;
 }
 
 export const ItemCard = ({ 
@@ -49,6 +52,39 @@ export const ItemCard = ({
 }: ItemCardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const auth = useAuth();
+  const [isStarred, setIsStarred] = useState(false);
+  const [starLoading, setStarLoading] = useState(false);
+
+  const getResourceTypeAndEndpoint = () => {
+    if (location.pathname.includes('/datasets')) {
+      return { type: 'DATASET', endpoint: 'datasets' };
+    } else if (location.pathname.includes('/models')) {
+      return { type: 'MODEL', endpoint: 'models' };
+    } else if (location.pathname.includes('/notebooks')) {
+      return { type: 'NOTEBOOK', endpoint: 'notebooks' };
+    } else if (location.pathname.includes('/repositories')) {
+      return { type: 'REPOSITORY', endpoint: 'repositories' };
+    }
+    return { type: 'MODEL', endpoint: 'models' };
+  };
+
+  useEffect(() => {
+    if (!auth.user?.profile.email) return;
+    
+    const checkStarStatus = async () => {
+      try {
+        const { endpoint } = getResourceTypeAndEndpoint();
+        const response = await fetch(`http://localhost:8080/api/${endpoint}/${id}/star?userEmail=${encodeURIComponent(auth.user?.profile.email || '')}`);
+        const starred = await response.json();
+        setIsStarred(starred);
+      } catch (error) {
+        console.error('Error checking star status:', error);
+      }
+    };
+
+    checkStarStatus();
+  }, [id, location.pathname, auth.user?.profile.email]);
 
   const handleCardClick = () => {
     // Determine the route based on current path
@@ -60,6 +96,54 @@ export const ItemCard = ({
       navigate(`/resources/notebooks/${id}`);
     } else if (location.pathname.includes('/repositories')) {
       navigate(`/resources/repositories/${id}`);
+    }
+  };
+
+  const handleStarClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!auth.user?.profile.email) {
+      toaster.create({
+        title: "Please log in to star resources",
+        type: "error",
+      });
+      return;
+    }
+
+    try {
+      setStarLoading(true);
+      const { endpoint } = getResourceTypeAndEndpoint();
+      const response = await fetch(`http://localhost:8080/api/${endpoint}/${id}/star`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          userEmail: auth.user.profile.email,
+          userName: auth.user.profile.name || 'User'
+        })
+      });
+      
+      const newStarredState = await response.json();
+      setIsStarred(newStarredState);
+      
+      toaster.create({
+        title: newStarredState ? "Starred" : "Unstarred",
+        description: title,
+        type: "success",
+      });
+
+      if (onStar) {
+        onStar(id);
+      }
+    } catch (error) {
+      console.error('Error starring resource:', error);
+      toaster.create({
+        title: "Error updating star status",
+        type: "error",
+      });
+    } finally {
+      setStarLoading(false);
     }
   };
 
@@ -86,17 +170,15 @@ export const ItemCard = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onStar(id);
-            }}
-            color="gray.400"
+            onClick={handleStarClick}
+            color={isStarred ? "yellow.500" : "gray.400"}
             _hover={{ color: "yellow.500" }}
             minW="auto"
             h="auto"
             p={1}
+            loading={starLoading}
           >
-            ☆
+            {isStarred ? "★" : "☆"}
           </Button>
         </Flex>
 

@@ -18,7 +18,7 @@
  */
 
 import React, { useState } from 'react';
-import { Box, VStack, Text, Button } from '@chakra-ui/react';
+import { Box, VStack, HStack, Text, Button, Container, Input } from '@chakra-ui/react';
 import { useNavigate } from 'react-router';
 import { adminApiService } from '../../lib/adminApi';
 
@@ -79,185 +79,236 @@ export const AddStorageResourceForm = () => {
   };
 
   return (
-    <Box bg="gray.50" minH="100vh" p={8}>
-      <VStack spacing={6} maxW="600px" mx="auto">
-        <Button
-          onClick={() => navigate('/resources?tab=storage')}
-          color="gray.600"
-          alignSelf="flex-start"
-        >
-          ← Back
-        </Button>
-        
-        <Text fontSize="2xl" fontWeight="bold">
-          Add <Text as="span" color="blue.500">Storage Resource</Text>
-        </Text>
-        
-        <Text color="gray.600" textAlign="center" fontSize="sm">
-          Provide a name, description, and select the type of storage you want to register. The form will update to show the relevant fields based on your chosen storage type.
-        </Text>
-        
-        <Box bg="white" p={8} borderRadius="lg" w="full" border="1px solid" borderColor="gray.200">
-          <VStack as="form" onSubmit={handleSubmit} spacing={6} align="stretch">
-            {/* Name */}
-            <VStack align="start" spacing={2}>
-              <Text fontWeight="medium" color="gray.700">
-                Name
-              </Text>
-              <Box
-                as="input"
-                type="text"
-                placeholder="Enter resource name"
-                value={formData.name}
-                onChange={(e: any) => handleInputChange('name', e.target.value)}
-                w="full"
-                p={3}
-                border="1px solid"
-                borderColor="gray.300"
-                borderRadius="md"
-                _focus={{ borderColor: "blue.500" }}
-              />
-            </VStack>
-
-            {/* Description */}
-            <VStack align="start" spacing={2}>
-              <Text fontWeight="medium" color="gray.700">
-                Description
-              </Text>
-              <Box
-                as="textarea"
-                placeholder="Enter resource description"
-                value={formData.description}
-                onChange={(e: any) => handleInputChange('description', e.target.value)}
-                w="full"
-                p={3}
-                border="1px solid"
-                borderColor="gray.300"
-                borderRadius="md"
-                minH="80px"
-                _focus={{ borderColor: "blue.500" }}
-              />
-            </VStack>
-
-            {/* Storage Type */}
-            <VStack align="start" spacing={2}>
-              <Text fontWeight="medium" color="gray.700">
-                Storage Type
-              </Text>
-              <Box
-                as="select"
-                value={formData.storageType}
-                onChange={(e: any) => handleInputChange('storageType', e.target.value)}
-                w="full"
-                p={3}
-                border="1px solid"
-                borderColor="gray.300"
-                borderRadius="md"
-                _focus={{ borderColor: "blue.500" }}
-                bg="white"
-              >
-                <option value="S3">S3</option>
-                <option value="GCS">Google Cloud Storage</option>
-                <option value="Azure">Azure Blob Storage</option>
-              </Box>
-            </VStack>
-
-            {/* End Point URL */}
-            <VStack align="start" spacing={2}>
-              <Text fontWeight="medium" color="gray.700">
-                End Point URL
-              </Text>
-              <Box
-                as="input"
-                type="url"
-                placeholder="https://s3.amazonaws.com"
-                value={formData.endPointUrl}
-                onChange={(e: any) => handleInputChange('endPointUrl', e.target.value)}
-                w="full"
-                p={3}
-                border="1px solid"
-                borderColor="gray.300"
-                borderRadius="md"
-                _focus={{ borderColor: "blue.500" }}
-              />
-            </VStack>
-
-            {/* Bucket Name */}
-            <VStack align="start" spacing={2}>
-              <Text fontWeight="medium" color="gray.700">
-                Bucket Name
-              </Text>
-              <Box
-                as="input"
-                type="text"
-                placeholder="my-storage-bucket"
-                value={formData.bucketName}
-                onChange={(e: any) => handleInputChange('bucketName', e.target.value)}
-                w="full"
-                p={3}
-                border="1px solid"
-                borderColor="gray.300"
-                borderRadius="md"
-                _focus={{ borderColor: "blue.500" }}
-              />
-            </VStack>
-
-            {/* Access Key */}
-            <VStack align="start" spacing={2}>
-              <Text fontWeight="medium" color="gray.700">
-                Access Key
-              </Text>
-              <Box
-                as="input"
-                type="text"
-                placeholder="AKIAIOSFODNN7EXAMPLE"
-                value={formData.accessKey}
-                onChange={(e: any) => handleInputChange('accessKey', e.target.value)}
-                w="full"
-                p={3}
-                border="1px solid"
-                borderColor="gray.300"
-                borderRadius="md"
-                _focus={{ borderColor: "blue.500" }}
-              />
-            </VStack>
-
-            {/* Secret Key */}
-            <VStack align="start" spacing={2}>
-              <Text fontWeight="medium" color="gray.700">
-                Secret Key
-              </Text>
-              <Box
-                as="input"
-                type="password"
-                placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-                value={formData.secretKey}
-                onChange={(e: any) => handleInputChange('secretKey', e.target.value)}
-                w="full"
-                p={3}
-                border="1px solid"
-                borderColor="gray.300"
-                borderRadius="md"
-                _focus={{ borderColor: "blue.500" }}
-              />
-            </VStack>
-
-            {/* Submit Button */}
+    <Box bg="gray.50" minH="100vh">
+      <Container maxW="1000px" py={8}>
+        {/* Header */}
+        <VStack spacing={8} align="stretch">
+          <HStack>
             <Button
-              type="submit"
+              variant="ghost"
+              onClick={() => navigate('/resources?tab=storage')}
+              color="gray.600"
+              size="sm"
+              leftIcon={<Text>←</Text>}
+            >
+              Back
+            </Button>
+          </HStack>
+
+          {/* Title and Steps */}
+          <VStack spacing={6} align="center">
+            <Text fontSize="2xl" fontWeight="semibold" color="gray.800">
+              Add <Text as="span" color="#60B4F7">Storage Resource</Text>
+            </Text>
+            
+            {/* Single Step Indicator */}
+            <Box
               bg="black"
               color="white"
-              _hover={{ bg: "gray.800" }}
-              disabled={loading}
-              w="full"
-              mt={6}
-              py={6}
+              px={3}
+              py={1}
+              borderRadius="full"
+              fontSize="sm"
+              fontWeight="medium"
             >
-              {loading ? 'Creating...' : 'Verify & Create'}
-            </Button>
+              Storage Resource Setup
+            </Box>
+
+            <Text color="gray.600" textAlign="center" fontSize="sm" maxW="600px" lineHeight="1.6">
+              Provide a name, description, and select the type of storage you want to register. The form will update to show the relevant fields based on your chosen storage type.
+            </Text>
           </VStack>
-        </Box>
-      </VStack>
+
+          {/* Form */}
+          <Box bg="white" p={8} borderRadius="lg" border="1px solid" borderColor="gray.200">
+            <VStack as="form" onSubmit={handleSubmit} spacing={8} align="stretch">
+              {/* Form Fields */}
+              <VStack spacing={6} align="stretch">
+                {/* Name */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Name <Text as="span" color="red.500">*</Text>
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Input
+                      placeholder=""
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                      required
+                    />
+                  </Box>
+                </HStack>
+
+                {/* Description */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Description
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Input
+                      placeholder=""
+                      value={formData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                    />
+                  </Box>
+                </HStack>
+
+                {/* Storage Type */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Storage Type <Text as="span" color="red.500">*</Text>
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Box as="select" 
+                      value={formData.storageType}
+                      onChange={(e: any) => handleInputChange('storageType', e.target.value)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      p={2}
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                      w="full"
+                    >
+                      <option value="S3">S3</option>
+                      <option value="GCS">Google Cloud Storage</option>
+                      <option value="Azure">Azure Blob Storage</option>
+                    </Box>
+                  </Box>
+                </HStack>
+
+                {/* End Point URL */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      End Point URL <Text as="span" color="red.500">*</Text>
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Input
+                      placeholder="https://your-storage-endpoint.com"
+                      value={formData.endPointUrl}
+                      onChange={(e) => handleInputChange('endPointUrl', e.target.value)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                      required
+                    />
+                  </Box>
+                </HStack>
+
+                {/* Bucket Name */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Bucket Name <Text as="span" color="red.500">*</Text>
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Input
+                      placeholder="bucket-name"
+                      value={formData.bucketName}
+                      onChange={(e) => handleInputChange('bucketName', e.target.value)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                      required
+                    />
+                  </Box>
+                </HStack>
+
+                {/* Access Key */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Access Key
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Input
+                      placeholder="Your access key"
+                      value={formData.accessKey}
+                      onChange={(e) => handleInputChange('accessKey', e.target.value)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                    />
+                  </Box>
+                </HStack>
+
+                {/* Secret Key */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Secret Key
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Input
+                      type="password"
+                      placeholder="Your secret key"
+                      value={formData.secretKey}
+                      onChange={(e) => handleInputChange('secretKey', e.target.value)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                    />
+                  </Box>
+                </HStack>
+              </VStack>
+
+              {/* Submit Button */}
+              <HStack justify="center" pt={6}>
+                <Button
+                  type="submit"
+                  bg="black"
+                  color="white"
+                  size="lg"
+                  px={8}
+                  py={3}
+                  borderRadius="md"
+                  _hover={{ bg: "gray.800" }}
+                  loading={loading}
+                  fontWeight="medium"
+                >
+                  {loading ? "Creating..." : "Verify & Create"}
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        </VStack>
+      </Container>
     </Box>
   );
 };

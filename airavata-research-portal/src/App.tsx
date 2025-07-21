@@ -26,6 +26,8 @@ import ResourceDetails from "./components/resources/ResourceDetails";
 import Notebooks from "./components/notebooks";
 import Repositories from "./components/repositories";
 import {Login} from "./components/auth/UserLoginPage";
+import {Signup} from "./components/auth/SignupPage";
+import {OAuthCallback} from "./components/auth/OAuthCallback";
 import ProtectedComponent from "./components/auth/ProtectedComponent";
 import {AuthProvider, AuthProviderProps} from "react-oidc-context";
 import {useEffect, useState} from "react";
@@ -48,6 +50,9 @@ import SearchResults from "./components/search/SearchResults";
 import {AddModelForm} from "./components/models/AddModelForm";
 import {AddDatasetForm} from "./components/datasets/AddDatasetForm";
 import {DatasetDetail} from "./components/datasets/DatasetDetail";
+import {ModelDetail} from "./components/models/ModelDetail";
+import {NotebookDetail} from "./components/notebooks/NotebookDetail";
+import {RepositoryDetail} from "./components/repositories/RepositoryDetail";
 import {AddComputeResourceForm} from "./components/resources/AddComputeResourceForm";
 import {AddStorageResourceForm} from "./components/resources/AddStorageResourceForm";
 import {AddNotebookForm} from "./components/notebooks/AddNotebookForm";
@@ -114,6 +119,8 @@ function App() {
           <UserSet/>
           <Routes>
             <Route path="/login" element={<Login/>}/>
+            <Route path="/signup" element={<Signup/>}/>
+            <Route path="/oauth_callback" element={<OAuthCallback/>}/>
 
             {/* Public Routes with Sidebar Layout */}
             <Route element={<SidebarLayout/>}>
@@ -129,6 +136,9 @@ function App() {
               <Route path="/resources/models/new" element={<AddModelForm/>}/>
               <Route path="/resources/datasets/new" element={<AddDatasetForm/>}/>
               <Route path="/resources/datasets/:id" element={<DatasetDetail/>}/>
+              <Route path="/resources/models/:id" element={<ModelDetail/>}/>
+              <Route path="/resources/notebooks/:id" element={<NotebookDetail/>}/>
+              <Route path="/resources/repositories/:id" element={<RepositoryDetail/>}/>
               <Route path="/resources/compute/new" element={<AddComputeResourceForm/>}/>
               <Route path="/resources/storage/new" element={<AddStorageResourceForm/>}/>
               <Route path="/resources/notebooks/new" element={<AddNotebookForm/>}/>
