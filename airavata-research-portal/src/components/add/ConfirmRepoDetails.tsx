@@ -16,7 +16,7 @@ import {
   createListCollection,
 } from "@chakra-ui/react";
 import { toaster } from "../ui/toaster";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 const privacyOptions = createListCollection({
@@ -143,7 +143,7 @@ export const ConfirmRepoDetails = ({
           </Select.Root>
         </Field.Root>
 
-        <Button w="full" loading={loading} onClick={onSubmit}>
+        <Button w="full" disabled={loading} onClick={onSubmit}>
           Add Repository
         </Button>
       </VStack>

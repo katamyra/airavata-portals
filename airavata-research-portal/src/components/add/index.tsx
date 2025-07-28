@@ -1,5 +1,5 @@
 import { Button, Container, HStack, Heading, Text } from "@chakra-ui/react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 
 export const Add = () => {
   return (

@@ -2,7 +2,7 @@ import { Provider } from "@/components/ui/provider";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { BrowserRouter } from "react-router";
+import { BrowserRouter } from "react-router-dom";
 
 const Index = () => {
   return (

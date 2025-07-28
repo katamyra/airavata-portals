@@ -109,7 +109,6 @@ export const DeleteResourceButton = ({
                       width="100%"
                       colorPalette="red"
                       disabled={deleteName !== resource.name || deleteLoading}
-                      loading={deleteLoading}
                       onClick={handleDeleteResource}
                   >
                     Delete

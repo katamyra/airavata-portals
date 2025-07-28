@@ -26,7 +26,7 @@ import {
   Flex,
   Spacer,
 } from "@chakra-ui/react";
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import { useState, useEffect } from "react";
 import { toaster } from "@/components/ui/toaster";
@@ -176,7 +176,7 @@ export const ItemCard = ({
             minW="auto"
             h="auto"
             p={1}
-            loading={starLoading}
+            disabled={starLoading}
           >
             {isStarred ? "★" : "☆"}
           </Button>

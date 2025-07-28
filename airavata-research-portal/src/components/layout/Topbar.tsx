@@ -26,7 +26,7 @@ import {
   Spacer,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 
 export const Topbar = () => {

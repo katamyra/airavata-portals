@@ -19,7 +19,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Box, VStack, HStack, Text, Button, Badge } from '@chakra-ui/react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router-dom';
 import { adminApiService } from '../../lib/adminApi';
 
 interface Repository {

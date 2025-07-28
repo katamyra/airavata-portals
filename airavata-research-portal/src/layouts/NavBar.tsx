@@ -32,7 +32,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import ApacheAiravataLogo from "../assets/airavata-logo.png";
-import {Link, useNavigate} from "react-router";
+import {Link, useNavigate} from "react-router-dom";
 import {RxHamburgerMenu} from "react-icons/rx";
 import {IoClose} from "react-icons/io5";
 import {UserMenu} from "@/components/auth/UserMenu";

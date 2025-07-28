@@ -144,7 +144,6 @@ export const StartSessionFromProjectButton = ({
                   mt={4}
                   onClick={handleOpenProject}
                   disabled={!sessionName || loadingOpenProject}
-                  loading={loadingOpenProject}
                 >
                   Create session
                 </Button>

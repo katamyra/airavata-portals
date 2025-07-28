@@ -1,7 +1,7 @@
 import { Box, Button, Container, HStack, Input, Text, VStack } from "@chakra-ui/react";
 import { useState } from "react";
 import { useAuth } from "react-oidc-context";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 // Using the existing hero image
 import HeroImage from "../../assets/Hero.original.png";
@@ -114,7 +114,7 @@ export const Login = () => {
                 color="white"
                 _hover={{ backgroundColor: "blue.500" }}
                 onClick={handleLogin}
-                loading={loading}
+                disabled={loading}
               >
                 Sign In
               </Button>
@@ -129,7 +129,7 @@ export const Login = () => {
                 _hover={{ backgroundColor: "gray.50" }}
                 leftIcon={<Text>🔗</Text>}
                 onClick={handleLogin}
-                loading={loading}
+                disabled={loading}
               >
                 Sign in with Cilogon
               </Button>

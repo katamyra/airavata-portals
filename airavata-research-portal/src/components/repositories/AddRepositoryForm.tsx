@@ -29,7 +29,7 @@ import {
   Heading,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { adminApiService } from "../../lib/adminApi";
 
 export const AddRepositoryForm = () => {
@@ -209,7 +209,7 @@ export const AddRepositoryForm = () => {
                     bg="#60b4f7"
                     color="white"
                     _hover={{ bg: "#4a9ce6" }}
-                    loading={loading}
+                    disabled={loading}
                   >
                     {loading ? "Connecting..." : "Connect Repository"}
                   </Button>

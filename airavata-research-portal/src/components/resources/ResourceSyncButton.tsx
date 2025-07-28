@@ -16,7 +16,7 @@ import { CreateResourceRequest } from "@/interfaces/Requests/CreateResourceReque
 import { CONTROLLER } from "@/lib/controller";
 import api from "@/lib/api";
 import { toaster } from "../ui/toaster";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { nanoid } from "nanoid";
 
 export const ResourceSyncButton = ({
@@ -95,7 +95,7 @@ export const ResourceSyncButton = ({
               <Dialog.ActionTrigger asChild>
                 <Button variant="outline">Cancel</Button>
               </Dialog.ActionTrigger>
-              <Button variant="solid" onClick={onSync} loading={loading}>
+              <Button variant="solid" onClick={onSync} disabled={loading}>
                 Save
               </Button>
             </Dialog.Footer>

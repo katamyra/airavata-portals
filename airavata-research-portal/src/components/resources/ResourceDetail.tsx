@@ -27,35 +27,69 @@ import {
   Heading,
   Flex,
   Spinner,
+  Badge,
+  useDisclosure,
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router";
-import { adminApiService } from "../../lib/adminApi";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { unifiedApiService } from "../../lib/apiConfig";
+import { toaster } from "../ui/toaster";
+import {
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+  DialogActionTrigger,
+} from "../ui/dialog";
 
 interface StorageResource {
-  id: number;
+  id: string;
   name: string;
-  storage: string;
+  storage?: string;
   storageType: string;
-  status: string;
+  status?: string;
+  isActive?: boolean;
   description: string;
+  capacityTB?: number;
+  supportsEncryption?: boolean;
+  supportsVersioning?: boolean;
+  host?: string;
+  port?: number;
+  accessCredentials?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface ComputeResource {
-  id: number;
+  id: string;
   name: string;
-  compute: string;
+  compute?: string;
   computeType: string;
-  status: string;
+  status?: string;
+  isActive?: boolean;
   description: string;
+  cpuCores?: number;
+  memoryGB?: number;
+  gpuCores?: number;
+  host?: string;
+  port?: number;
+  accessCredentials?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const ResourceDetail = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  
   const [resource, setResource] = useState<StorageResource | ComputeResource | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Extract type from URL path
@@ -72,15 +106,15 @@ export const ResourceDetail = () => {
       setError(null);
       
       if (type === "storage" && id) {
-        const data = await adminApiService.getStorageResourceById(parseInt(id));
+        const data = await unifiedApiService.getStorageResourceById(id);
         setResource(data);
       } else if (type === "compute" && id) {
-        const data = await adminApiService.getComputeResourceById(parseInt(id));
+        const data = await unifiedApiService.getComputeResourceById(id);
         setResource(data);
       } else {
         setError("Invalid resource type or ID");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to fetch resource:", err);
       console.error("Error details:", {
         type,
@@ -95,17 +129,61 @@ export const ResourceDetail = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "active":
-        return "green";
-      case "full":
-        return "red";
-      case "archived":
-        return "yellow";
-      default:
-        return "gray";
+  const handleEdit = () => {
+    navigate(`/resources/${type}/${id}/edit`);
+  };
+
+  const handleDelete = async () => {
+    try {
+      setDeleting(true);
+      
+      if (type === "storage" && id) {
+        await unifiedApiService.deleteStorageResource(id);
+        toaster.create({
+          title: "Storage resource deleted",
+          description: "The storage resource has been successfully deleted.",
+          type: "success",
+        });
+      } else if (type === "compute" && id) {
+        await unifiedApiService.deleteComputeResource(id);
+        toaster.create({
+          title: "Compute resource deleted", 
+          description: "The compute resource has been successfully deleted.",
+          type: "success",
+        });
+      }
+      
+      navigate("/resources");
+    } catch (err: any) {
+      console.error("Failed to delete resource:", err);
+      toaster.create({
+        title: "Delete failed",
+        description: `Failed to delete resource: ${err.response?.data || err.message}`,
+        type: "error",
+      });
+    } finally {
+      setDeleting(false);
+      onClose();
     }
+  };
+
+  const getStatusColor = (resource: any) => {
+    // Handle both old status string format and new isActive boolean format
+    if (typeof resource.status === 'string') {
+      switch (resource.status.toLowerCase()) {
+        case "active":
+          return "green";
+        case "full":
+          return "red";
+        case "archived":
+          return "yellow";
+        default:
+          return "gray";
+      }
+    } else if (typeof resource.isActive === 'boolean') {
+      return resource.isActive ? "green" : "gray";
+    }
+    return "gray";
   };
 
   if (loading) {
@@ -153,19 +231,36 @@ export const ResourceDetail = () => {
                 <Text color="gray.600" textTransform="capitalize">
                   {type} Resource
                 </Text>
-                <Box
+                <Badge
                   px={3}
                   py={1}
                   borderRadius="full"
                   fontSize="sm"
                   fontWeight="medium"
-                  color="white"
-                  bg={`${getStatusColor(resource.status)}.500`}
+                  colorScheme={getStatusColor(resource)}
                 >
-                  {resource.status}
-                </Box>
+                  {typeof resource.status === 'string' ? resource.status : 
+                   ((resource as any).isActive ? 'Active' : 'Inactive')}
+                </Badge>
               </HStack>
             </VStack>
+            
+            {/* Action Buttons */}
+            <HStack spacing={3}>
+              <Button
+                colorScheme="blue"
+                onClick={handleEdit}
+              >
+                Edit
+              </Button>
+              <Button
+                colorScheme="red"
+                variant="outline"
+                onClick={onOpen}
+              >
+                Delete
+              </Button>
+            </HStack>
           </Flex>
 
           {/* Details Card */}
@@ -188,44 +283,107 @@ export const ResourceDetail = () => {
                     <Text>{resource.name}</Text>
                   </HStack>
                   
-                  {(resource as any).storage ? (
+                  <HStack justify="space-between">
+                    <Text fontWeight="medium" color="gray.600">ID:</Text>
+                    <Text fontSize="sm" fontFamily="mono" color="gray.500">{resource.id}</Text>
+                  </HStack>
+                  
+                  {type === "storage" ? (
                     <>
-                      <HStack justify="space-between">
-                        <Text fontWeight="medium" color="gray.600">Storage:</Text>
-                        <Text>{(resource as StorageResource).storage}</Text>
-                      </HStack>
                       <HStack justify="space-between">
                         <Text fontWeight="medium" color="gray.600">Storage Type:</Text>
                         <Text>{(resource as StorageResource).storageType}</Text>
                       </HStack>
+                      {(resource as StorageResource).capacityTB && (
+                        <HStack justify="space-between">
+                          <Text fontWeight="medium" color="gray.600">Capacity:</Text>
+                          <Text>{(resource as StorageResource).capacityTB} TB</Text>
+                        </HStack>
+                      )}
+                      {(resource as StorageResource).supportsEncryption !== undefined && (
+                        <HStack justify="space-between">
+                          <Text fontWeight="medium" color="gray.600">Supports Encryption:</Text>
+                          <Badge colorScheme={(resource as StorageResource).supportsEncryption ? "green" : "gray"}>
+                            {(resource as StorageResource).supportsEncryption ? "Yes" : "No"}
+                          </Badge>
+                        </HStack>
+                      )}
+                      {(resource as StorageResource).supportsVersioning !== undefined && (
+                        <HStack justify="space-between">
+                          <Text fontWeight="medium" color="gray.600">Supports Versioning:</Text>
+                          <Badge colorScheme={(resource as StorageResource).supportsVersioning ? "green" : "gray"}>
+                            {(resource as StorageResource).supportsVersioning ? "Yes" : "No"}
+                          </Badge>
+                        </HStack>
+                      )}
                     </>
                   ) : (
                     <>
                       <HStack justify="space-between">
-                        <Text fontWeight="medium" color="gray.600">Compute:</Text>
-                        <Text>{(resource as ComputeResource).compute}</Text>
-                      </HStack>
-                      <HStack justify="space-between">
                         <Text fontWeight="medium" color="gray.600">Compute Type:</Text>
                         <Text>{(resource as ComputeResource).computeType}</Text>
                       </HStack>
+                      {(resource as ComputeResource).cpuCores && (
+                        <HStack justify="space-between">
+                          <Text fontWeight="medium" color="gray.600">CPU Cores:</Text>
+                          <Text>{(resource as ComputeResource).cpuCores}</Text>
+                        </HStack>
+                      )}
+                      {(resource as ComputeResource).memoryGB && (
+                        <HStack justify="space-between">
+                          <Text fontWeight="medium" color="gray.600">Memory:</Text>
+                          <Text>{(resource as ComputeResource).memoryGB} GB</Text>
+                        </HStack>
+                      )}
+                      {(resource as ComputeResource).gpuCores && (
+                        <HStack justify="space-between">
+                          <Text fontWeight="medium" color="gray.600">GPU Cores:</Text>
+                          <Text>{(resource as ComputeResource).gpuCores}</Text>
+                        </HStack>
+                      )}
+                    </>
+                  )}
+                  
+                  {((resource as any).host || (resource as any).port) && (
+                    <>
+                      {(resource as any).host && (
+                        <HStack justify="space-between">
+                          <Text fontWeight="medium" color="gray.600">Host:</Text>
+                          <Text fontFamily="mono" fontSize="sm">{(resource as any).host}</Text>
+                        </HStack>
+                      )}
+                      {(resource as any).port && (
+                        <HStack justify="space-between">
+                          <Text fontWeight="medium" color="gray.600">Port:</Text>
+                          <Text>{(resource as any).port}</Text>
+                        </HStack>
+                      )}
                     </>
                   )}
                   
                   <HStack justify="space-between">
                     <Text fontWeight="medium" color="gray.600">Status:</Text>
-                    <Box
+                    <Badge
                       px={2}
                       py={1}
                       borderRadius="full"
                       fontSize="xs"
                       fontWeight="medium"
-                      color="white"
-                      bg={`${getStatusColor(resource.status)}.500`}
+                      colorScheme={getStatusColor(resource)}
                     >
-                      {resource.status}
-                    </Box>
+                      {typeof resource.status === 'string' ? resource.status : 
+                       ((resource as any).isActive ? 'Active' : 'Inactive')}
+                    </Badge>
                   </HStack>
+                  
+                  {(resource as any).createdAt && (
+                    <HStack justify="space-between">
+                      <Text fontWeight="medium" color="gray.600">Created:</Text>
+                      <Text fontSize="sm" color="gray.500">
+                        {new Date((resource as any).createdAt).toLocaleDateString()}
+                      </Text>
+                    </HStack>
+                  )}
                 </VStack>
               </Box>
 
@@ -240,7 +398,7 @@ export const ResourceDetail = () => {
 
               <Box>
                 <Text fontSize="lg" fontWeight="bold" color="gray.800" mb={3}>
-                  Actions
+                  Quick Actions
                 </Text>
                 <HStack spacing={3}>
                   <Button
@@ -254,7 +412,7 @@ export const ResourceDetail = () => {
                     variant="outline"
                     borderColor="gray.300"
                   >
-                    Configure
+                    Test Connection
                   </Button>
                   <Button
                     variant="outline"
@@ -262,12 +420,50 @@ export const ResourceDetail = () => {
                   >
                     Monitor
                   </Button>
+                  <Button
+                    colorScheme="blue"
+                    onClick={handleEdit}
+                  >
+                    Edit Resource
+                  </Button>
                 </HStack>
               </Box>
             </VStack>
           </Box>
         </VStack>
       </Container>
+      
+      {/* Delete Confirmation Dialog */}
+      <DialogRoot open={isOpen} onOpenChange={({ open }) => !open && onClose()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle fontSize="lg" fontWeight="bold">
+              Delete {type} Resource
+            </DialogTitle>
+          </DialogHeader>
+
+          <DialogBody>
+            Are you sure you want to delete "{resource?.name}"? This action cannot be undone.
+          </DialogBody>
+
+          <DialogFooter>
+            <DialogActionTrigger asChild>
+              <Button ref={cancelRef} onClick={onClose}>
+                Cancel
+              </Button>
+            </DialogActionTrigger>
+            <Button
+              colorScheme="red"
+              onClick={handleDelete}
+              isLoading={deleting}
+              loadingText="Deleting..."
+              ml={3}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </DialogRoot>
     </Box>
   );
 };

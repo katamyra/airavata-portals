@@ -85,11 +85,10 @@ export const AddGitUrl = ({
         />
         <Button
             width="full"
-            loading={loadingPull}
+            disabled={loadingPull || !githubUrl}
             onClick={onPullCybershuttleYml}
             mt={4}
             colorScheme="blue"
-            disabled={!githubUrl}
         >
           Pull cybershuttle.yml file
         </Button>

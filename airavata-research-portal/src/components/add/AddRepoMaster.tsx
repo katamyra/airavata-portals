@@ -1,7 +1,7 @@
 import { Box, Button, Container, Heading } from "@chakra-ui/react";
 import { useState } from "react";
 import { AddGitUrl } from "./AddGitUrl";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { CreateResourceRequest } from "@/interfaces/Requests/CreateResourceRequest";
 import { ConfirmRepoDetails } from "./ConfirmRepoDetails";

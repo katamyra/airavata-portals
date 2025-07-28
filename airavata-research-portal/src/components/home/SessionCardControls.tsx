@@ -104,7 +104,6 @@ export const SessionCardControls = ({ session }: { session: SessionType }) => {
           size="sm"
           colorPalette="yellow"
           onClick={handleResumeSession}
-          loading={openLoading}
           disabled={openLoading}
         >
           Restart
@@ -121,7 +120,6 @@ export const SessionCardControls = ({ session }: { session: SessionType }) => {
           colorPalette="red"
           variant="outline"
           onClick={handleTerminateSession}
-          loading={terminateLoading}
           disabled={terminateLoading}
         >
           Terminate
@@ -130,7 +128,6 @@ export const SessionCardControls = ({ session }: { session: SessionType }) => {
           size="sm"
           colorPalette="green"
           onClick={handleOpenSession}
-          loading={openLoading}
           disabled={openLoading}
         >
           Open

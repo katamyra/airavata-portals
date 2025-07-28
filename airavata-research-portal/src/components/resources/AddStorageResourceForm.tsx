@@ -17,25 +17,71 @@
  *  under the License.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, VStack, HStack, Text, Button, Container, Input } from '@chakra-ui/react';
-import { useNavigate } from 'react-router';
-import { adminApiService } from '../../lib/adminApi';
+import { toaster } from '../ui/toaster';
+import { useNavigate, useParams } from 'react-router-dom';
+import { unifiedApiService } from '../../lib/apiConfig';
 
 export const AddStorageResourceForm = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(!!id);
+  
+  const isEditMode = !!id;
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    storageType: 'S3',
-    endPointUrl: '',
-    bucketName: '',
-    accessKey: '',
-    secretKey: ''
+    hostname: '',
+    storageType: 'Object Storage',
+    capacityTB: 1,
+    accessProtocol: 'S3',
+    endpoint: '',
+    supportsEncryption: false,
+    supportsVersioning: false,
+    additionalInfo: '',
+    resourceManager: ''
   });
 
-  const handleInputChange = (field: string, value: string) => {
+  useEffect(() => {
+    if (isEditMode && id) {
+      loadExistingResource();
+    }
+  }, [isEditMode, id]);
+
+  const loadExistingResource = async () => {
+    try {
+      setInitialLoading(true);
+      const resource = await unifiedApiService.getStorageResourceById(id!);
+      
+      setFormData({
+        name: resource.name || '',
+        description: resource.description || '',
+        hostname: resource.hostname || '',
+        storageType: resource.storageType || 'Object Storage',
+        capacityTB: resource.capacityTB || 1,
+        accessProtocol: resource.accessProtocol || 'S3',
+        endpoint: resource.endpoint || '',
+        supportsEncryption: resource.supportsEncryption || false,
+        supportsVersioning: resource.supportsVersioning || false,
+        additionalInfo: resource.additionalInfo || '',
+        resourceManager: resource.resourceManager || ''
+      });
+    } catch (error: any) {
+      console.error('Failed to load storage resource:', error);
+      toaster.create({
+        title: "Error",
+        description: "Failed to load storage resource data",
+        type: "error",
+      });
+      navigate('/resources?tab=storage');
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string | number | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -46,37 +92,72 @@ export const AddStorageResourceForm = () => {
     e.preventDefault();
     
     if (!formData.name.trim() || !formData.description.trim()) {
-      alert('Please fill in name and description');
-      return;
-    }
-
-    if (!formData.endPointUrl.trim() || !formData.bucketName.trim()) {
-      alert('Please fill in endpoint URL and bucket name');
+      toaster.create({
+        title: "Validation Error",
+        description: "Please fill in name and description",
+        type: "error",
+      });
       return;
     }
 
     setLoading(true);
     try {
-      const newStorageResource = {
+      // Create object matching v2 StorageResource entity structure
+      const storageResourceData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
+        hostname: formData.hostname.trim(), // Use 'hostname' to match backend entity
         storageType: formData.storageType,
-        storage: `${formData.bucketName} (${formData.endPointUrl})`,
-        status: 'ACTIVE'
+        capacityTB: parseInt(formData.capacityTB.toString()),
+        accessProtocol: formData.accessProtocol,
+        endpoint: formData.endpoint.trim(),
+        supportsEncryption: formData.supportsEncryption,
+        supportsVersioning: formData.supportsVersioning,
+        resourceManager: formData.resourceManager.trim(),
+        additionalInfo: formData.additionalInfo.trim() || null
       };
 
-      console.log('Submitting storage resource:', newStorageResource);
-      const createdResource = await adminApiService.createStorageResource(newStorageResource);
-      console.log('Storage resource created successfully:', createdResource);
+      console.log(`${isEditMode ? 'Updating' : 'Creating'} storage resource:`, storageResourceData);
       
-      navigate('/resources?tab=storage');
-    } catch (error) {
-      console.error('Failed to create storage resource:', error);
-      alert('Failed to create storage resource. Please try again.');
+      let result;
+      if (isEditMode && id) {
+        result = await unifiedApiService.updateStorageResource(id, storageResourceData);
+        toaster.create({
+          title: "Success",
+          description: "Storage resource updated successfully",
+          type: "success",
+        });
+        navigate(`/resources/storage/${id}`);
+      } else {
+        result = await unifiedApiService.createStorageResource(storageResourceData);
+        toaster.create({
+          title: "Success",
+          description: "Storage resource created successfully",
+          type: "success",
+        });
+        navigate('/resources?tab=storage');
+      }
+      
+      console.log(`Storage resource ${isEditMode ? 'updated' : 'created'} successfully:`, result);
+    } catch (error: any) {
+      console.error(`Failed to ${isEditMode ? 'update' : 'create'} storage resource:`, error);
+      toaster.create({
+        title: "Error",
+        description: `Failed to ${isEditMode ? 'update' : 'create'} storage resource: ${error.response?.data || error.message}`,
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  if (initialLoading) {
+    return (
+      <Box bg="gray.50" minH="100vh" display="flex" alignItems="center" justifyContent="center">
+        <Text>Loading storage resource...</Text>
+      </Box>
+    );
+  }
 
   return (
     <Box bg="gray.50" minH="100vh">
@@ -86,7 +167,13 @@ export const AddStorageResourceForm = () => {
           <HStack>
             <Button
               variant="ghost"
-              onClick={() => navigate('/resources?tab=storage')}
+              onClick={() => {
+                if (isEditMode) {
+                  navigate(`/resources/storage/${id}`);
+                } else {
+                  navigate('/resources?tab=storage');
+                }
+              }}
               color="gray.600"
               size="sm"
               leftIcon={<Text>←</Text>}
@@ -95,27 +182,14 @@ export const AddStorageResourceForm = () => {
             </Button>
           </HStack>
 
-          {/* Title and Steps */}
+          {/* Title */}
           <VStack spacing={6} align="center">
             <Text fontSize="2xl" fontWeight="semibold" color="gray.800">
-              Add <Text as="span" color="#60B4F7">Storage Resource</Text>
+              {isEditMode ? 'Edit' : 'Add'} <Text as="span" color="#60B4F7">Storage Resource</Text>
             </Text>
             
-            {/* Single Step Indicator */}
-            <Box
-              bg="black"
-              color="white"
-              px={3}
-              py={1}
-              borderRadius="full"
-              fontSize="sm"
-              fontWeight="medium"
-            >
-              Storage Resource Setup
-            </Box>
-
             <Text color="gray.600" textAlign="center" fontSize="sm" maxW="600px" lineHeight="1.6">
-              Provide a name, description, and select the type of storage you want to register. The form will update to show the relevant fields based on your chosen storage type.
+              Provide information about your storage resource. The form will collect the relevant configuration details.
             </Text>
           </VStack>
 
@@ -134,7 +208,7 @@ export const AddStorageResourceForm = () => {
                   <Text color="gray.500" pt={2}>:</Text>
                   <Box flex={1}>
                     <Input
-                      placeholder=""
+                      placeholder="e.g., Campus Data Storage"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       bg="white"
@@ -151,13 +225,13 @@ export const AddStorageResourceForm = () => {
                 <HStack spacing={4} align="start">
                   <Box minW="200px" pt={2}>
                     <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                      Description
+                      Description <Text as="span" color="red.500">*</Text>
                     </Text>
                   </Box>
                   <Text color="gray.500" pt={2}>:</Text>
                   <Box flex={1}>
                     <Input
-                      placeholder=""
+                      placeholder="Brief description of the storage resource"
                       value={formData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
                       bg="white"
@@ -165,6 +239,30 @@ export const AddStorageResourceForm = () => {
                       borderColor="gray.300"
                       borderRadius="md"
                       _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                      required
+                    />
+                  </Box>
+                </HStack>
+
+                {/* Hostname */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Hostname <Text as="span" color="red.500">*</Text>
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Input
+                      placeholder="e.g., storage.university.edu"
+                      value={formData.hostname}
+                      onChange={(e) => handleInputChange('hostname', e.target.value)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                      required
                     />
                   </Box>
                 </HStack>
@@ -189,26 +287,81 @@ export const AddStorageResourceForm = () => {
                       _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
                       w="full"
                     >
-                      <option value="S3">S3</option>
-                      <option value="GCS">Google Cloud Storage</option>
-                      <option value="Azure">Azure Blob Storage</option>
+                      <option value="Object Storage">Object Storage</option>
+                      <option value="File System">File System</option>
+                      <option value="Database">Database</option>
+                      <option value="Block Storage">Block Storage</option>
                     </Box>
                   </Box>
                 </HStack>
 
-                {/* End Point URL */}
+                {/* Capacity TB */}
                 <HStack spacing={4} align="start">
                   <Box minW="200px" pt={2}>
                     <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                      End Point URL <Text as="span" color="red.500">*</Text>
+                      Capacity (TB) <Text as="span" color="red.500">*</Text>
                     </Text>
                   </Box>
                   <Text color="gray.500" pt={2}>:</Text>
                   <Box flex={1}>
                     <Input
-                      placeholder="https://your-storage-endpoint.com"
-                      value={formData.endPointUrl}
-                      onChange={(e) => handleInputChange('endPointUrl', e.target.value)}
+                      type="number"
+                      placeholder="e.g., 100"
+                      value={formData.capacityTB}
+                      onChange={(e) => handleInputChange('capacityTB', parseInt(e.target.value) || 1)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                      min={1}
+                      required
+                    />
+                  </Box>
+                </HStack>
+
+                {/* Access Protocol */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Access Protocol <Text as="span" color="red.500">*</Text>
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Box as="select" 
+                      value={formData.accessProtocol}
+                      onChange={(e: any) => handleInputChange('accessProtocol', e.target.value)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      p={2}
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                      w="full"
+                    >
+                      <option value="S3">S3</option>
+                      <option value="SFTP">SFTP</option>
+                      <option value="NFS">NFS</option>
+                      <option value="HTTP">HTTP</option>
+                      <option value="HTTPS">HTTPS</option>
+                    </Box>
+                  </Box>
+                </HStack>
+
+                {/* Endpoint */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Endpoint <Text as="span" color="red.500">*</Text>
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Input
+                      placeholder="e.g., https://s3.amazonaws.com or /mnt/storage"
+                      value={formData.endpoint}
+                      onChange={(e) => handleInputChange('endpoint', e.target.value)}
                       bg="white"
                       border="1px solid"
                       borderColor="gray.300"
@@ -219,19 +372,67 @@ export const AddStorageResourceForm = () => {
                   </Box>
                 </HStack>
 
-                {/* Bucket Name */}
+                {/* Features */}
                 <HStack spacing={4} align="start">
                   <Box minW="200px" pt={2}>
                     <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                      Bucket Name <Text as="span" color="red.500">*</Text>
+                      Features
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <VStack flex={1} align="stretch" spacing={3}>
+                    <HStack spacing={2} align="center">
+                      <Box
+                        as="input"
+                        type="checkbox"
+                        checked={formData.supportsEncryption}
+                        onChange={(e: any) => handleInputChange('supportsEncryption', e.target.checked)}
+                        w="16px"
+                        h="16px"
+                        bg={formData.supportsEncryption ? "#60B4F7" : "white"}
+                        border="1px solid"
+                        borderColor="gray.300"
+                        borderRadius="sm"
+                        _focus={{ borderColor: "#60B4F7" }}
+                      />
+                      <Text fontSize="sm" color="gray.700">
+                        Supports Encryption
+                      </Text>
+                    </HStack>
+                    <HStack spacing={2} align="center">
+                      <Box
+                        as="input"
+                        type="checkbox"
+                        checked={formData.supportsVersioning}
+                        onChange={(e: any) => handleInputChange('supportsVersioning', e.target.checked)}
+                        w="16px"
+                        h="16px"
+                        bg={formData.supportsVersioning ? "#60B4F7" : "white"}
+                        border="1px solid"
+                        borderColor="gray.300"
+                        borderRadius="sm"
+                        _focus={{ borderColor: "#60B4F7" }}
+                      />
+                      <Text fontSize="sm" color="gray.700">
+                        Supports Versioning
+                      </Text>
+                    </HStack>
+                  </VStack>
+                </HStack>
+
+                {/* Resource Manager */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Resource Manager <Text as="span" color="red.500">*</Text>
                     </Text>
                   </Box>
                   <Text color="gray.500" pt={2}>:</Text>
                   <Box flex={1}>
                     <Input
-                      placeholder="bucket-name"
-                      value={formData.bucketName}
-                      onChange={(e) => handleInputChange('bucketName', e.target.value)}
+                      placeholder="e.g., University IT Department"
+                      value={formData.resourceManager}
+                      onChange={(e) => handleInputChange('resourceManager', e.target.value)}
                       bg="white"
                       border="1px solid"
                       borderColor="gray.300"
@@ -242,42 +443,19 @@ export const AddStorageResourceForm = () => {
                   </Box>
                 </HStack>
 
-                {/* Access Key */}
+                {/* Additional Info */}
                 <HStack spacing={4} align="start">
                   <Box minW="200px" pt={2}>
                     <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                      Access Key
+                      Additional Info
                     </Text>
                   </Box>
                   <Text color="gray.500" pt={2}>:</Text>
                   <Box flex={1}>
                     <Input
-                      placeholder="Your access key"
-                      value={formData.accessKey}
-                      onChange={(e) => handleInputChange('accessKey', e.target.value)}
-                      bg="white"
-                      border="1px solid"
-                      borderColor="gray.300"
-                      borderRadius="md"
-                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
-                    />
-                  </Box>
-                </HStack>
-
-                {/* Secret Key */}
-                <HStack spacing={4} align="start">
-                  <Box minW="200px" pt={2}>
-                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                      Secret Key
-                    </Text>
-                  </Box>
-                  <Text color="gray.500" pt={2}>:</Text>
-                  <Box flex={1}>
-                    <Input
-                      type="password"
-                      placeholder="Your secret key"
-                      value={formData.secretKey}
-                      onChange={(e) => handleInputChange('secretKey', e.target.value)}
+                      placeholder="Any additional configuration details"
+                      value={formData.additionalInfo}
+                      onChange={(e) => handleInputChange('additionalInfo', e.target.value)}
                       bg="white"
                       border="1px solid"
                       borderColor="gray.300"
@@ -299,10 +477,13 @@ export const AddStorageResourceForm = () => {
                   py={3}
                   borderRadius="md"
                   _hover={{ bg: "gray.800" }}
-                  loading={loading}
+                  disabled={loading}
                   fontWeight="medium"
                 >
-                  {loading ? "Creating..." : "Verify & Create"}
+                  {loading 
+                    ? (isEditMode ? "Updating..." : "Creating...") 
+                    : (isEditMode ? "Update Storage Resource" : "Create Storage Resource")
+                  }
                 </Button>
               </HStack>
             </VStack>

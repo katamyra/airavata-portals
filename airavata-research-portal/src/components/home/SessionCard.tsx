@@ -95,7 +95,6 @@ export const SessionCard = ({ session }: { session: SessionType }) => {
                   width="100%"
                   colorPalette="red"
                   disabled={deleteName !== session.sessionName || deleteLoading}
-                  loading={deleteLoading}
                   onClick={handleDeleteSession}
                 >
                   Delete

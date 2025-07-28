@@ -26,7 +26,7 @@ import {
   Flex,
   Spacer,
 } from "@chakra-ui/react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 
 interface SidebarItemProps {

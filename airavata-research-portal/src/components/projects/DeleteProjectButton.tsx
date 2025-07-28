@@ -96,7 +96,6 @@ export const DeleteProjectButton = ({
                       width="100%"
                       colorPalette="red"
                       disabled={deleteName !== project.name || deleteLoading}
-                      loading={deleteLoading}
                       onClick={handleDeleteProject}
                   >
                     Delete

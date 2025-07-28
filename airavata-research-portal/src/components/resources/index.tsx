@@ -27,11 +27,11 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { adminApiService } from "../../lib/adminApi";
-import { useNavigate, useSearchParams } from "react-router";
+import { unifiedApiService } from "../../lib/apiConfig";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface StorageResource {
-  id: number;
+  id: string;
   name: string;
   storage: string;
   storageType: string;
@@ -40,7 +40,7 @@ interface StorageResource {
 }
 
 interface ComputeResource {
-  id: number;
+  id: string;
   name: string;
   compute: string;
   computeType: string;
@@ -69,15 +69,23 @@ export const Resources = () => {
       setError(null);
       
       if (activeTab === "storage") {
-        const data = await adminApiService.getStorageResources();
-        setStorageResources(data);
+        const response = await unifiedApiService.getStorageResources({
+          pageNumber: 0,
+          pageSize: 100,
+          nameSearch: ""
+        });
+        setStorageResources(response.content || response);
       } else {
-        const data = await adminApiService.getComputeResources();
-        setComputeResources(data);
+        const response = await unifiedApiService.getComputeResources({
+          pageNumber: 0,
+          pageSize: 100,
+          nameSearch: ""
+        });
+        setComputeResources(response.content || response);
       }
     } catch (err) {
       console.error("Failed to fetch resources:", err);
-      setError("Failed to load resources. Make sure the API server is running.");
+      setError("Failed to load resources. Make sure the Research Service API is running on port 8080.");
     } finally {
       setLoading(false);
     }
@@ -85,6 +93,10 @@ export const Resources = () => {
 
   const handleViewResource = (id, type) => {
     navigate(`/resources/${type}/${id}`);
+  };
+
+  const handleEditResource = (id, type) => {
+    navigate(`/resources/${type}/${id}/edit`);
   };
 
   // Get unique types and statuses for current tab
@@ -95,7 +107,15 @@ export const Resources = () => {
       activeTab === "storage" ? resource.storageType : resource.computeType
     ))];
     
-    const statuses = [...new Set(currentResources.map(resource => resource.status))];
+    const statuses = [...new Set(currentResources.map(resource => {
+      // Handle both old status string format and new isActive boolean format
+      if (typeof resource.status === 'string') {
+        return resource.status;
+      } else if (typeof resource.isActive === 'boolean') {
+        return resource.isActive ? "Active" : "Inactive";
+      }
+      return "Unknown";
+    }))];
     
     return { types, statuses };
   };
@@ -108,7 +128,11 @@ export const Resources = () => {
       const typeMatch = typeFilter === "All" || 
         (activeTab === "storage" ? resource.storageType === typeFilter : resource.computeType === typeFilter);
       
-      const statusMatch = statusFilter === "All" || resource.status === statusFilter;
+      const statusMatch = statusFilter === "All" || 
+        (typeof resource.status === 'string' && resource.status === statusFilter) ||
+        (typeof resource.isActive === 'boolean' && 
+         ((statusFilter === "Active" && resource.isActive) || 
+          (statusFilter === "Inactive" && !resource.isActive)));
       
       return typeMatch && statusMatch;
     });
@@ -120,17 +144,23 @@ export const Resources = () => {
     setStatusFilter("All");
   }, [activeTab]);
 
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case "active":
-        return "green";
-      case "full":
-        return "red";
-      case "archived":
-        return "yellow";
-      default:
-        return "gray";
+  const getStatusColor = (resource) => {
+    // Handle both old status string format and new isActive boolean format
+    if (typeof resource.status === 'string') {
+      switch (resource.status.toLowerCase()) {
+        case "active":
+          return "green";
+        case "full":
+          return "red";
+        case "archived":
+          return "yellow";
+        default:
+          return "gray";
+      }
+    } else if (typeof resource.isActive === 'boolean') {
+      return resource.isActive ? "green" : "gray";
     }
+    return "gray";
   };
 
   return (
@@ -317,7 +347,7 @@ export const Resources = () => {
                     <Box w="100px">
                       <Text fontSize="sm" fontWeight="bold" color="gray.600">Status</Text>
                     </Box>
-                    <Box w="80px">
+                    <Box w="200px">
                       <Text fontSize="sm" fontWeight="bold" color="gray.600">Actions</Text>
                     </Box>
                   </HStack>
@@ -341,7 +371,7 @@ export const Resources = () => {
                       </Box>
                       <Box w="120px">
                         <Text fontSize="sm">
-                          {activeTab === "storage" ? resource.storage : resource.compute}
+                          {activeTab === "storage" ? (resource.hostname || resource.storage) : (resource.hostname || resource.compute)}
                         </Text>
                       </Box>
                       <Box w="120px">
@@ -358,21 +388,31 @@ export const Resources = () => {
                           fontSize="xs"
                           fontWeight="medium"
                           color="white"
-                          bg={`${getStatusColor(resource.status)}.500`}
+                          bg={`${getStatusColor(resource)}.500`}
                         >
-                          {resource.status}
+                          {typeof resource.status === 'string' ? resource.status : 
+                           (resource.isActive ? 'Active' : 'Inactive')}
                         </Box>
                       </Box>
-                      <Box w="80px">
-                        <Button
-                          size="sm"
-                          bg="black"
-                          color="white"
-                          _hover={{ bg: "gray.800" }}
-                          onClick={() => handleViewResource(resource.id, activeTab)}
-                        >
-                          View
-                        </Button>
+                      <Box w="200px">
+                        <HStack spacing={2}>
+                          <Button
+                            size="sm"
+                            bg="black"
+                            color="white"
+                            _hover={{ bg: "gray.800" }}
+                            onClick={() => handleViewResource(resource.id, activeTab)}
+                          >
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            colorScheme="blue"
+                            onClick={() => handleEditResource(resource.id, activeTab)}
+                          >
+                            Edit
+                          </Button>
+                        </HStack>
                       </Box>
                     </HStack>
                   </Box>

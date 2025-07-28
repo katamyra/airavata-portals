@@ -18,7 +18,7 @@
  */
 
 import {useColorMode} from "./components/ui/color-mode";
-import {Route, Routes, useLocation, useNavigate} from "react-router";
+import {Route, Routes, useLocation, useNavigate} from "react-router-dom";
 import Home from "./components/home";
 import {Models} from "./components/models";
 import {Datasets} from "./components/datasets";
@@ -140,7 +140,9 @@ function App() {
               <Route path="/resources/notebooks/:id" element={<NotebookDetail/>}/>
               <Route path="/resources/repositories/:id" element={<RepositoryDetail/>}/>
               <Route path="/resources/compute/new" element={<AddComputeResourceForm/>}/>
+              <Route path="/resources/compute/:id/edit" element={<AddComputeResourceForm/>}/>
               <Route path="/resources/storage/new" element={<AddStorageResourceForm/>}/>
+              <Route path="/resources/storage/:id/edit" element={<AddStorageResourceForm/>}/>
               <Route path="/resources/notebooks/new" element={<AddNotebookForm/>}/>
               <Route path="/resources/repositories/new" element={<AddRepositoryForm/>}/>
               <Route path="/catalog" element={<Catalog/>}/>

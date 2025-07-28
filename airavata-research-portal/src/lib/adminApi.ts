@@ -20,7 +20,7 @@
 import axios, { AxiosInstance } from 'axios';
 
 // Admin API Server configuration
-const ADMIN_API_BASE_URL = 'http://localhost:8080';
+const ADMIN_API_BASE_URL = 'http://localhost:8081';
 
 // Create axios instance for admin API
 const adminApi: AxiosInstance = axios.create({

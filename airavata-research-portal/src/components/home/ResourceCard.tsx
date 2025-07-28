@@ -25,7 +25,7 @@ import {ResourceTypeBadge} from "../resources/ResourceTypeBadge";
 import {ResourceTypeEnum} from "@/interfaces/ResourceTypeEnum";
 import {ModelCardButton} from "../models/ModelCardButton";
 import {useState} from "react";
-import {Link} from 'react-router';
+import {Link} from 'react-router-dom';
 import {ResourceOptions} from "@/components/resources/ResourceOptions.tsx";
 
 export const ResourceCard = ({

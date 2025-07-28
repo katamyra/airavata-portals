@@ -130,7 +130,7 @@ export const StarResourceButton = ({
             }}
             color={'black'}
             onClick={handleStarResource}
-            loading={changeStarLoading}
+            disabled={changeStarLoading}
         >
           {
             starred ? <BsStarFill color={'#EFBF04'}/> : <BsStar/>

@@ -18,7 +18,7 @@
  */
 
 import { Box, Flex } from "@chakra-ui/react";
-import { Outlet } from "react-router";
+import { Outlet } from "react-router-dom";
 import { GlobalSidebar } from "../components/layout/GlobalSidebar";
 import { Topbar } from "../components/layout/Topbar";
 import { useAuth } from "react-oidc-context";

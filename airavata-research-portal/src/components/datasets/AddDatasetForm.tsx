@@ -19,7 +19,7 @@
 
 import React, { useState } from 'react';
 import { Box, VStack, HStack, Text, Button } from '@chakra-ui/react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { adminApiService } from '../../lib/adminApi';
 
 type UploadOption = 'file' | 'url' | 'repository';

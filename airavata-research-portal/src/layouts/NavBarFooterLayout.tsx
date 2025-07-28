@@ -1,6 +1,6 @@
 // layout.tsx
 import NavBar from "@/layouts/NavBar";
-import { Outlet } from "react-router";
+import { Outlet } from "react-router-dom";
 
 const NavBarFooterLayout = () => {
   return (

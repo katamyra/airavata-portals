@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "react-oidc-context";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 function ProtectedComponent({ Component }: { Component: React.FC }) {
   const auth = useAuth();

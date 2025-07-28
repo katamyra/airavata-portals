@@ -1,6 +1,6 @@
 import {Box, Button, Container, Field, Heading, Input, VStack,} from "@chakra-ui/react";
 import {useState} from "react";
-import {useNavigate} from "react-router";
+import {useNavigate} from "react-router-dom";
 import {FaArrowLeft} from "react-icons/fa";
 import {CreateProjectRequest} from "@/interfaces/Requests/CreateProjectRequest";
 import RepoSearchInput from "./RepoSearch";
@@ -120,7 +120,7 @@ export const AddProjectMaster = () => {
               setCreateResourceRequest={setCreateProjectRequest}
           />
 
-          <Button onClick={handleSubmit} loading={loading} w="full">
+          <Button onClick={handleSubmit} disabled={loading} w="full">
             Submit
           </Button>
         </VStack>
