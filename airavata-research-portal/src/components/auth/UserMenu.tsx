@@ -1,7 +1,5 @@
 import {
-  Avatar,
   Box,
-  HStack,
   Text,
   Menu,
   Portal,
@@ -42,25 +40,16 @@ export const UserMenu = () => {
   return (
     <Menu.Root>
       <Menu.Trigger asChild>
-        <HStack
-          gap={3}
-          p={1}
+        <Box
+          p={2}
           rounded="md"
           as="button"
           cursor="pointer"
           transition="all .2s"
           _hover={{ bg: "gray.200" }}
         >
-          <Avatar.Root variant="subtle">
-            <Avatar.Fallback name={auth.user?.profile.name} />
-          </Avatar.Root>
-          <Box textAlign="left">
-            <Text fontSize="sm">{auth.user?.profile.name}</Text>
-            <Text fontSize="xs" color="gray.500">
-              {auth.user?.profile.email}
-            </Text>
-          </Box>
-        </HStack>
+          <Text fontSize="sm">{auth.user?.profile.name}</Text>
+        </Box>
       </Menu.Trigger>
 
       <Portal>

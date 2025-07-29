@@ -25,6 +25,7 @@ import {ResourceCard} from "@/components/home/ResourceCard.tsx";
 import {PageHeader} from "@/components/PageHeader.tsx";
 import {StatusEnum} from "@/interfaces/StatusEnum.ts";
 import {PrivacyEnum} from "@/interfaces/PrivacyEnum.ts";
+import {v1ApiService} from "@/lib/v1Api.ts";
 
 export const StarredResourcesPage = () => {
   const [starredResources, setStarredResources] = useState([]);
@@ -37,21 +38,22 @@ export const StarredResourcesPage = () => {
     async function getStarredResources() {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8080/api/users/${encodeURIComponent(auth.user?.profile.email || '')}/starred`);
+        // Fetch starred codes from v2 API
+        const response = await fetch('http://localhost:8080/api/v2/rf/codes/starred');
         const data = await response.json();
         
-        // Transform the data to match the expected Resource format
-        const transformedResources = data.map((item: any) => ({
-          id: item.resource.id.toString(),
-          name: item.resource.title,
-          description: item.resource.description || '',
-          headerImage: item.resource.headerImage || '',
-          authors: item.resource.authors || [],
-          tags: (item.resource.tags || []).map((tag: string) => ({ value: tag })),
+        // Transform v2 Code data to match expected Resource format
+        const transformedResources = data.content ? data.content.map((code: any) => ({
+          id: code.id.toString(),
+          name: code.name || 'Untitled Code',
+          description: code.description || '',
+          headerImage: code.headerImage || '',
+          authors: code.authors || [],
+          tags: (code.tags || []).map((tag: string) => ({ value: tag })),
           status: StatusEnum.VERIFIED,
           privacy: PrivacyEnum.PUBLIC,
-          type: item.type.toUpperCase()
-        }));
+          type: 'CODE'
+        })) : [];
         
         setStarredResources(transformedResources);
       } catch (error) {

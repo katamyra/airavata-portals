@@ -176,6 +176,68 @@ export const researchApiService = {
     const response = await researchApi.get(`/storage-resources/${id}/stars/count`);
     return response.data;
   },
+
+  // Code Resources V2 endpoints
+  async getCodes(params?: {
+    pageNumber?: number;
+    pageSize?: number;
+    nameSearch?: string;
+    tag?: string[];
+  }) {
+    const queryParams = new URLSearchParams();
+    if (params?.pageNumber !== undefined) queryParams.append('pageNumber', params.pageNumber.toString());
+    if (params?.pageSize !== undefined) queryParams.append('pageSize', params.pageSize.toString());
+    if (params?.nameSearch) queryParams.append('nameSearch', params.nameSearch);
+    if (params?.tag) {
+      params.tag.forEach(t => queryParams.append('tag', t));
+    }
+    
+    const fullUrl = `/codes/public?${queryParams}`;
+    console.log('🌐 Research API calling:', `${researchApi.defaults.baseURL}${fullUrl}`);
+    
+    const response = await researchApi.get(fullUrl);
+    return response.data;
+  },
+
+  async getCodeById(id: string) {
+    const response = await researchApi.get(`/codes/public/${id}`);
+    return response.data;
+  },
+
+  async createCode(code: any) {
+    const response = await researchApi.post('/codes/', code);
+    return response.data;
+  },
+
+  async updateCode(id: string, code: any) {
+    const response = await researchApi.put(`/codes/${id}`, code);
+    return response.data;
+  },
+
+  async deleteCode(id: string) {
+    const response = await researchApi.delete(`/codes/${id}`);
+    return response.data;
+  },
+
+  async searchCodes(keyword: string) {
+    const response = await researchApi.get(`/codes/search?keyword=${encodeURIComponent(keyword)}`);
+    return response.data;
+  },
+
+  async starCode(id: string) {
+    const response = await researchApi.post(`/codes/${id}/star`);
+    return response.data;
+  },
+
+  async checkCodeStarred(id: string) {
+    const response = await researchApi.get(`/codes/${id}/star`);
+    return response.data;
+  },
+
+  async getCodeStarCount(id: string) {
+    const response = await researchApi.get(`/codes/${id}/stars/count`);
+    return response.data;
+  },
 };
 
 export default researchApi;

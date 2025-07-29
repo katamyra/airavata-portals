@@ -29,77 +29,88 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { v1ApiService } from "../../lib/v1Api";
+import { researchApiService } from "../../lib/researchApi";
 import { ItemCard } from "../common/ItemCard";
 
-interface Dataset {
-  id: string;
+interface Code {
+  id: number;
   name: string;
   description: string;
-  tags: Array<{name: string}>;
+  tags: string[];
   authors: string[];
-  datasetUrl: string;
-  headerImage: string;
-  createdAt: string;
-  updatedAt: string;
+  starCount: number;
+  codeType: string;
+  programmingLanguage: string;
+  framework?: string;
 }
 
 const filterCategories = [
   "All",
-  "Computer Vision", 
-  "Cyber Security",
-  "Finance",
-  "Healthcare",
-  "NLP",
-  "Life Sciences"
+  "Models",
+  "Notebooks", 
+  "Repositories",
+  "TensorFlow",
+  "PyTorch",
+  "Scikit-learn"
 ];
 
-export const Datasets = () => {
+export const Codes = () => {
   const navigate = useNavigate();
-  const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const [codes, setCodes] = useState<Code[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState("All");
 
   useEffect(() => {
-    fetchDatasets();
+    fetchCodes();
   }, []);
 
-  const fetchDatasets = async () => {
+  const fetchCodes = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await v1ApiService.getDatasets();
-      // Handle paginated response from v1 API
-      const data = response.content || response;
-      setDatasets(data);
+      const response = await researchApiService.getCodes();
+      setCodes(response.content || response);
     } catch (err) {
-      console.error("Failed to fetch datasets:", err);
-      setError("Failed to load datasets. Make sure the research service API is running on port 8080.");
+      console.error("Failed to fetch codes:", err);
+      setError("Failed to load codes. Make sure the API server is running.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStar = async (id: string) => {
+  const handleStar = async (id: number) => {
     try {
-      await v1ApiService.starDataset(id);
-      // V1 API doesn't have star count, so we just log the action
-      console.log("Dataset starred:", id);
-      // Refresh datasets to get any updates
-      fetchDatasets();
+      await researchApiService.starCode(id.toString());
+      // Refresh the codes to get updated star count
+      fetchCodes();
     } catch (err) {
-      console.error("Failed to star dataset:", err);
+      console.error("Failed to star code:", err);
     }
   };
 
-  const filteredDatasets = activeFilter === "All" 
-    ? datasets 
-    : datasets.filter(dataset => {
-        // Filter by tags since v1 API doesn't have category field
-        const tagNames = dataset.tags.map(tag => tag.name.toLowerCase());
-        const filterKey = activeFilter.toLowerCase().replace(" ", "_");
-        return tagNames.some(tag => tag.includes(filterKey) || tag.includes(activeFilter.toLowerCase()));
+  const filteredCodes = activeFilter === "All" 
+    ? codes 
+    : codes.filter(code => {
+        const filter = activeFilter.toLowerCase();
+        switch(filter) {
+          case "models":
+            return code.codeType === "MODEL";
+          case "notebooks":
+            return code.codeType === "NOTEBOOK";
+          case "repositories":
+            return code.codeType === "REPOSITORY";
+          case "tensorflow":
+            return code.framework?.toLowerCase() === "tensorflow";
+          case "pytorch":
+            return code.framework?.toLowerCase() === "pytorch";
+          case "scikit-learn":
+            return code.framework?.toLowerCase() === "scikit-learn";
+          default:
+            return code.codeType?.toLowerCase().includes(filter) ||
+                   code.programmingLanguage?.toLowerCase().includes(filter) ||
+                   code.framework?.toLowerCase().includes(filter);
+        }
       });
 
   return (
@@ -110,11 +121,11 @@ export const Datasets = () => {
           <Flex justify="space-between" align="start">
             <Box flex={1}>
               <Text fontSize="4xl" fontWeight="bold" color="gray.800" mb={4}>
-                Datasets
+                Code
               </Text>
               <Text color="gray.600" maxW="600px" lineHeight="1.6" fontSize="md">
-                Access and manage datasets seamlessly in CyberShuttle. Use them directly 
-                in notebooks or add your own for easy integration into your workflows.
+                Access and share code repositories seamlessly in CyberShuttle. Browse through 
+                various programming languages, frameworks, and code types to accelerate your development.
               </Text>
             </Box>
             
@@ -132,7 +143,7 @@ export const Datasets = () => {
                 alignItems="center"
                 justifyContent="center"
               >
-                <Text fontSize="3xl">📊</Text>
+                <Text fontSize="3xl">💻</Text>
               </Box>
               <Box
                 position="absolute"
@@ -146,7 +157,7 @@ export const Datasets = () => {
                 alignItems="center"
                 justifyContent="center"
               >
-                <Text fontSize="xl">💾</Text>
+                <Text fontSize="xl">⚡</Text>
               </Box>
               <Box
                 position="absolute"
@@ -160,12 +171,12 @@ export const Datasets = () => {
                 alignItems="center"
                 justifyContent="center"
               >
-                <Text fontSize="lg">🗂️</Text>
+                <Text fontSize="lg">🔧</Text>
               </Box>
             </Box>
           </Flex>
 
-          {/* New Dataset Button */}
+          {/* New Code Button */}
           <Box>
             <Button
               bg="#60b4f7"
@@ -174,9 +185,9 @@ export const Datasets = () => {
               leftIcon={<Text>+</Text>}
               _hover={{ bg: "#4a9ce6" }}
               borderRadius="md"
-              onClick={() => navigate('/resources/datasets/new')}
+              onClick={() => navigate('/codes/new')}
             >
-              New Dataset
+              New Code
             </Button>
           </Box>
 
@@ -210,31 +221,31 @@ export const Datasets = () => {
           {/* Loading/Error States */}
           {loading && (
             <Box textAlign="center" py={12}>
-              <Text color="gray.500">Loading datasets...</Text>
+              <Text color="gray.500">Loading code repositories...</Text>
             </Box>
           )}
 
           {error && (
             <Box textAlign="center" py={12}>
               <Text color="red.500">{error}</Text>
-              <Button mt={4} onClick={fetchDatasets} size="sm">
+              <Button mt={4} onClick={fetchCodes} size="sm">
                 Retry
               </Button>
             </Box>
           )}
 
-          {/* Datasets Grid */}
+          {/* Codes Grid */}
           {!loading && !error && (
             <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={12}>
-              {filteredDatasets.map((dataset) => (
+              {filteredCodes.map((code) => (
                 <ItemCard
-                  key={dataset.id}
-                  id={dataset.id}
-                  title={dataset.name}
-                  description={dataset.description}
-                  tags={dataset.tags.map(tag => tag.name)}
-                  authors={dataset.authors}
-                  starCount={0} // V1 API doesn't have star count
+                  key={code.id}
+                  id={code.id}
+                  title={code.name}
+                  description={code.description}
+                  tags={code.tags}
+                  authors={code.authors}
+                  starCount={code.starCount}
                   onStar={handleStar}
                 />
               ))}
@@ -242,10 +253,10 @@ export const Datasets = () => {
           )}
 
           {/* Empty State */}
-          {!loading && !error && filteredDatasets.length === 0 && (
+          {!loading && !error && filteredCodes.length === 0 && (
             <Box textAlign="center" py={12}>
               <Text color="gray.500" fontSize="lg">
-                No datasets found for "{activeFilter}"
+                No code repositories found for "{activeFilter}"
               </Text>
               <Text color="gray.400" fontSize="sm" mt={2}>
                 Try selecting a different filter or check back later.

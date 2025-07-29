@@ -84,16 +84,7 @@ export const Topbar = () => {
 
         {/* Right side buttons */}
         <HStack spacing={3}>
-          {auth.isAuthenticated ? (
-            <>
-              <Button variant="ghost" size="sm">
-                <Text>🔔</Text>
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Text>👤</Text>
-              </Button>
-            </>
-          ) : (
+          {!auth.isAuthenticated && (
             <Button
               size="sm"
               bg="blue.500"

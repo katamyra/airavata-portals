@@ -64,9 +64,7 @@ export const GlobalSidebar = ({ isLoggedIn }: GlobalSidebarProps) => {
 
   const publicItems = [
     { icon: "⌂", label: "Home", to: "/" },
-    { icon: "◉", label: "Models", to: "/resources/models" },
-    { icon: "□", label: "Repositories", to: "/resources/repositories" },
-    { icon: "☰", label: "Notebooks", to: "/resources/notebooks" },
+    { icon: "💻", label: "Code", to: "/codes" },
     { icon: "▦", label: "Datasets", to: "/resources/datasets" },
     { icon: "◈", label: "Resources", to: "/resources" },
   ];

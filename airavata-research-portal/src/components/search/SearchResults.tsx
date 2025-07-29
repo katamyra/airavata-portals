@@ -14,8 +14,9 @@ import {
   Container,
   Divider
 } from '@chakra-ui/react';
-import ItemCard from '../common/ItemCard';
+import { ItemCard } from '../common/ItemCard';
 import { adminApiService } from '../../lib/adminApi';
+import { researchApiService } from '../../lib/researchApi';
 
 interface SearchItem {
   id: number;
@@ -25,7 +26,7 @@ interface SearchItem {
   authors: string[];
   starCount: number;
   category: string;
-  type: 'model' | 'dataset' | 'notebook' | 'repository' | 'compute' | 'storage';
+  type: 'dataset' | 'compute' | 'storage' | 'code';
 }
 
 const SearchResults: React.FC = () => {
@@ -44,11 +45,9 @@ const SearchResults: React.FC = () => {
   ];
 
   const filterOptions = [
-    { key: 'models', label: 'Models', icon: '🤖' },
-    { key: 'repositories', label: 'Repositories', icon: '📁' },
-    { key: 'notebooks', label: 'Notebooks', icon: '📓' },
     { key: 'datasets', label: 'Datasets', icon: '📊' },
-    { key: 'compute', label: 'Compute Resources', icon: '💻' },
+    { key: 'code', label: 'Code', icon: '💻' },
+    { key: 'compute', label: 'Compute Resources', icon: '🖥️' },
     { key: 'storage', label: 'Storage Resources', icon: '💾' },
     { key: 'authors', label: 'Authors', icon: '👤' }
   ];
@@ -67,20 +66,12 @@ const SearchResults: React.FC = () => {
       console.log('Starting search for:', query);
       
       const promises = [
-        adminApiService.searchModels(query).catch(err => {
-          console.error('Models search failed:', err);
-          return [];
-        }),
         adminApiService.searchDatasets(query).catch(err => {
           console.error('Datasets search failed:', err);
           return [];
         }),
-        adminApiService.searchNotebooks(query).catch(err => {
-          console.error('Notebooks search failed:', err);
-          return [];
-        }),
-        adminApiService.searchRepositories(query).catch(err => {
-          console.error('Repositories search failed:', err);
+        researchApiService.searchCodes(query).catch(err => {
+          console.error('Code search failed:', err);
           return [];
         }),
         adminApiService.searchComputeResources(query).catch(err => {
@@ -93,22 +84,23 @@ const SearchResults: React.FC = () => {
         })
       ];
 
-      const [models, datasets, notebooks, repositories, computeResources, storageResources] = await Promise.all(promises);
+      const [datasets, codes, computeResources, storageResources] = await Promise.all(promises);
 
       console.log('Search results:', {
-        models: models.length,
         datasets: datasets.length,
-        notebooks: notebooks.length,
-        repositories: repositories.length,
+        codes: codes.length,
         computeResources: computeResources.length,
         storageResources: storageResources.length
       });
 
       const allResults: SearchItem[] = [
-        ...models.map((item: any) => ({ ...item, type: 'model' as const })),
         ...datasets.map((item: any) => ({ ...item, type: 'dataset' as const })),
-        ...notebooks.map((item: any) => ({ ...item, type: 'notebook' as const })),
-        ...repositories.map((item: any) => ({ ...item, type: 'repository' as const })),
+        ...codes.map((item: any) => ({ 
+          ...item, 
+          type: 'code' as const,
+          title: item.name,
+          category: item.codeType || 'general'
+        })),
         ...computeResources.map((item: any) => ({ 
           ...item, 
           type: 'compute' as const,
@@ -165,14 +157,14 @@ const SearchResults: React.FC = () => {
     if (selectedFilters.length === 0) return true;
     return selectedFilters.some(filter => {
       switch (filter) {
-        case 'models':
-          return result.type === 'model';
         case 'datasets':
           return result.type === 'dataset';
-        case 'notebooks':
-          return result.type === 'notebook';
-        case 'repositories':
-          return result.type === 'repository';
+        case 'code':
+          return result.type === 'code';
+        case 'compute':
+          return result.type === 'compute';
+        case 'storage':
+          return result.type === 'storage';
         default:
           return true;
       }
@@ -300,10 +292,10 @@ const SearchResults: React.FC = () => {
               {totalResults} Results
             </Text>
 
-            {renderResultSection('model', 'Models', getResultsByType('model'))}
-            {renderResultSection('repository', 'Repositories', getResultsByType('repository'))}
-            {renderResultSection('notebook', 'Notebooks', getResultsByType('notebook'))}
             {renderResultSection('dataset', 'Datasets', getResultsByType('dataset'))}
+            {renderResultSection('code', 'Code', getResultsByType('code'))}
+            {renderResultSection('compute', 'Compute Resources', getResultsByType('compute'))}
+            {renderResultSection('storage', 'Storage Resources', getResultsByType('storage'))}
 
             {loading && (
               <Text textAlign="center" color="gray.500">

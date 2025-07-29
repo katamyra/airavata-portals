@@ -32,13 +32,13 @@ import { useState, useEffect } from "react";
 import { toaster } from "@/components/ui/toaster";
 
 interface ItemCardProps {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
   tags: string[];
   authors: string[];
   starCount: number;
-  onStar?: (id: number) => void;
+  onStar?: (id: number | string) => void;
 }
 
 export const ItemCard = ({ 
@@ -58,15 +58,17 @@ export const ItemCard = ({
 
   const getResourceTypeAndEndpoint = () => {
     if (location.pathname.includes('/datasets')) {
-      return { type: 'DATASET', endpoint: 'datasets' };
+      return { type: 'DATASET', endpoint: 'datasets', apiVersion: 'v1' };
     } else if (location.pathname.includes('/models')) {
-      return { type: 'MODEL', endpoint: 'models' };
+      return { type: 'MODEL', endpoint: 'models', apiVersion: 'v1' };
     } else if (location.pathname.includes('/notebooks')) {
-      return { type: 'NOTEBOOK', endpoint: 'notebooks' };
+      return { type: 'NOTEBOOK', endpoint: 'notebooks', apiVersion: 'v1' };
     } else if (location.pathname.includes('/repositories')) {
-      return { type: 'REPOSITORY', endpoint: 'repositories' };
+      return { type: 'REPOSITORY', endpoint: 'repositories', apiVersion: 'v1' };
+    } else if (location.pathname.includes('/codes')) {
+      return { type: 'CODE', endpoint: 'codes', apiVersion: 'v2' };
     }
-    return { type: 'MODEL', endpoint: 'models' };
+    return { type: 'MODEL', endpoint: 'models', apiVersion: 'v1' };
   };
 
   useEffect(() => {
@@ -74,8 +76,16 @@ export const ItemCard = ({
     
     const checkStarStatus = async () => {
       try {
-        const { endpoint } = getResourceTypeAndEndpoint();
-        const response = await fetch(`http://localhost:8080/api/${endpoint}/${id}/star?userEmail=${encodeURIComponent(auth.user?.profile.email || '')}`);
+        const { endpoint, apiVersion } = getResourceTypeAndEndpoint();
+        
+        // Skip star status check for v1 API due to authentication requirements
+        if (apiVersion === 'v1') {
+          setIsStarred(false);
+          return;
+        }
+        
+        const url = `http://localhost:8080/api/v2/rf/${endpoint}/${id}/star`;
+        const response = await fetch(url);
         const starred = await response.json();
         setIsStarred(starred);
       } catch (error) {
@@ -96,6 +106,8 @@ export const ItemCard = ({
       navigate(`/resources/notebooks/${id}`);
     } else if (location.pathname.includes('/repositories')) {
       navigate(`/resources/repositories/${id}`);
+    } else if (location.pathname.includes('/codes')) {
+      navigate(`/codes/${id}`);
     }
   };
 
@@ -110,20 +122,30 @@ export const ItemCard = ({
       return;
     }
 
+    const { apiVersion } = getResourceTypeAndEndpoint();
+    
+    // Disable star functionality for v1 API (datasets) due to authentication requirements
+    if (apiVersion === 'v1') {
+      toaster.create({
+        title: "Star functionality unavailable",
+        description: "Star functionality requires full authentication for this resource type",
+        type: "warning",
+      });
+      return;
+    }
+
     try {
       setStarLoading(true);
       const { endpoint } = getResourceTypeAndEndpoint();
-      const response = await fetch(`http://localhost:8080/api/${endpoint}/${id}/star`, {
+      const url = `http://localhost:8080/api/v2/rf/${endpoint}/${id}/star`;
+      const requestOptions = {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          userEmail: auth.user.profile.email,
-          userName: auth.user.profile.name || 'User'
-        })
-      });
+          'Content-Type': 'application/json',
+        }
+      };
       
+      const response = await fetch(url, requestOptions);
       const newStarredState = await response.json();
       setIsStarred(newStarredState);
       
@@ -155,7 +177,7 @@ export const ItemCard = ({
       p={4}
       bg="white"
       _hover={{ borderColor: "gray.300", shadow: "md", cursor: "pointer" }}
-      h="220px"
+      h="240px"
       display="flex"
       flexDirection="column"
       m={3}
@@ -183,19 +205,27 @@ export const ItemCard = ({
         </Flex>
 
         {/* Description */}
-        <Text color="gray.600" fontSize="sm" lineHeight="1.5" flex={1} mt={1}>
+        <Text 
+          color="gray.600" 
+          fontSize="sm" 
+          lineHeight="1.4"
+          overflow="hidden"
+          textOverflow="ellipsis"
+          noOfLines={3}
+          mb={2}
+        >
           {description}
         </Text>
 
         {/* Tags */}
-        <Box>
-          <HStack spacing={2} flexWrap="wrap">
-            {tags.map((tag, index) => (
+        <Box mb={2}>
+          <HStack spacing={1} flexWrap="wrap">
+            {tags.slice(0, 4).map((tag, index) => (
               <Box
                 key={index}
                 bg="#60b4f7"
                 color="white"
-                px={3}
+                px={2}
                 py={1}
                 borderRadius="full"
                 fontSize="xs"
@@ -204,21 +234,24 @@ export const ItemCard = ({
                 {tag}
               </Box>
             ))}
+            {tags.length > 4 && (
+              <Text fontSize="xs" color="gray.500">+{tags.length - 4} more</Text>
+            )}
           </HStack>
         </Box>
 
         <Spacer />
 
-        {/* Authors */}
-        <Box mt={2}>
+        {/* Authors - Fixed at bottom */}
+        <Box mt="auto" pt={2}>
           <Text fontSize="xs" color="gray.500" mb={1} fontWeight="medium">Authors -</Text>
           <Text 
             fontSize="xs" 
             color="gray.600" 
-            lineHeight="1.3"
+            lineHeight="1.2"
             overflow="hidden"
             textOverflow="ellipsis"
-            noOfLines={2}
+            noOfLines={1}
           >
             {authors.join(", ")}
           </Text>
