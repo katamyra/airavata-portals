@@ -31,12 +31,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { researchApiService } from "../../lib/researchApi";
 import { ItemCard } from "../common/ItemCard";
+import { TagV2, normalizeTags } from "../../lib/tagUtils";
 
 interface Code {
   id: number;
   name: string;
   description: string;
-  tags: string[];
+  tags: (string | TagV2)[];
   authors: string[];
   starCount: number;
   codeType: string;
@@ -243,7 +244,7 @@ export const Codes = () => {
                   id={code.id}
                   title={code.name}
                   description={code.description}
-                  tags={code.tags}
+                  tags={normalizeTags(code.tags)}
                   authors={code.authors}
                   starCount={code.starCount}
                   onStar={handleStar}

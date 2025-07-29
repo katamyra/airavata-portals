@@ -26,6 +26,7 @@ import {PageHeader} from "@/components/PageHeader.tsx";
 import {StatusEnum} from "@/interfaces/StatusEnum.ts";
 import {PrivacyEnum} from "@/interfaces/PrivacyEnum.ts";
 import {v1ApiService} from "@/lib/v1Api.ts";
+import {normalizeTag} from "@/lib/tagUtils.ts";
 
 export const StarredResourcesPage = () => {
   const [starredResources, setStarredResources] = useState([]);
@@ -49,7 +50,9 @@ export const StarredResourcesPage = () => {
           description: code.description || '',
           headerImage: code.headerImage || '',
           authors: code.authors || [],
-          tags: (code.tags || []).map((tag: string) => ({ value: tag })),
+          tags: (code.tags || []).map((tag: any) => ({ 
+            value: normalizeTag(tag) 
+          })),
           status: StatusEnum.VERIFIED,
           privacy: PrivacyEnum.PUBLIC,
           type: 'CODE'

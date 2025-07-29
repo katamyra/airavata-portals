@@ -17,18 +17,18 @@
  *  under the License.
  */
 
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from "axios";
 
 // Research Service API configuration for v2 infrastructure resources
-const RESEARCH_API_BASE_URL = 'http://localhost:8080'; // Airavata research-service port
+const RESEARCH_API_BASE_URL = "http://localhost:8080"; // Airavata research-service port
 
 // Create axios instance for research service API
 const researchApi: AxiosInstance = axios.create({
   baseURL: `${RESEARCH_API_BASE_URL}/api/v2/rf`,
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    "Content-Type": "application/json",
+    Accept: "application/json",
   },
 });
 
@@ -36,9 +36,9 @@ const researchApi: AxiosInstance = axios.create({
 researchApi.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('Research API Error:', error.response?.data || error.message);
+    console.error("Research API Error:", error.response?.data || error.message);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Research API service functions for v2 infrastructure resources
@@ -51,16 +51,21 @@ export const researchApiService = {
     tag?: string[];
   }) {
     const queryParams = new URLSearchParams();
-    if (params?.pageNumber !== undefined) queryParams.append('pageNumber', params.pageNumber.toString());
-    if (params?.pageSize !== undefined) queryParams.append('pageSize', params.pageSize.toString());
-    if (params?.nameSearch) queryParams.append('nameSearch', params.nameSearch);
+    if (params?.pageNumber !== undefined)
+      queryParams.append("pageNumber", params.pageNumber.toString());
+    if (params?.pageSize !== undefined)
+      queryParams.append("pageSize", params.pageSize.toString());
+    if (params?.nameSearch) queryParams.append("nameSearch", params.nameSearch);
     if (params?.tag) {
-      params.tag.forEach(t => queryParams.append('tag', t));
+      params.tag.forEach((t) => queryParams.append("tag", t));
     }
-    
+
     const fullUrl = `/compute-resources/public?${queryParams}`;
-    console.log('🌐 Research API calling:', `${researchApi.defaults.baseURL}${fullUrl}`);
-    
+    console.log(
+      "🌐 Research API calling:",
+      `${researchApi.defaults.baseURL}${fullUrl}`,
+    );
+
     const response = await researchApi.get(fullUrl);
     return response.data;
   },
@@ -71,12 +76,18 @@ export const researchApiService = {
   },
 
   async createComputeResource(computeResource: any) {
-    const response = await researchApi.post('/compute-resources/', computeResource);
+    const response = await researchApi.post(
+      "/compute-resources/",
+      computeResource,
+    );
     return response.data;
   },
 
   async updateComputeResource(id: string, computeResource: any) {
-    const response = await researchApi.put(`/compute-resources/${id}`, computeResource);
+    const response = await researchApi.put(
+      `/compute-resources/${id}`,
+      computeResource,
+    );
     return response.data;
   },
 
@@ -86,12 +97,16 @@ export const researchApiService = {
   },
 
   async searchComputeResources(keyword: string) {
-    const response = await researchApi.get(`/compute-resources/search?keyword=${encodeURIComponent(keyword)}`);
+    const response = await researchApi.get(
+      `/compute-resources/search?keyword=${encodeURIComponent(keyword)}`,
+    );
     return response.data;
   },
 
   async getComputeResourcesByType(computeType: string) {
-    const response = await researchApi.get(`/compute-resources/type/${computeType}`);
+    const response = await researchApi.get(
+      `/compute-resources/type/${computeType}`,
+    );
     return response.data;
   },
 
@@ -106,7 +121,9 @@ export const researchApiService = {
   },
 
   async getComputeResourceStarCount(id: string) {
-    const response = await researchApi.get(`/compute-resources/${id}/stars/count`);
+    const response = await researchApi.get(
+      `/compute-resources/${id}/stars/count`,
+    );
     return response.data;
   },
 
@@ -118,16 +135,21 @@ export const researchApiService = {
     tag?: string[];
   }) {
     const queryParams = new URLSearchParams();
-    if (params?.pageNumber !== undefined) queryParams.append('pageNumber', params.pageNumber.toString());
-    if (params?.pageSize !== undefined) queryParams.append('pageSize', params.pageSize.toString());
-    if (params?.nameSearch) queryParams.append('nameSearch', params.nameSearch);
+    if (params?.pageNumber !== undefined)
+      queryParams.append("pageNumber", params.pageNumber.toString());
+    if (params?.pageSize !== undefined)
+      queryParams.append("pageSize", params.pageSize.toString());
+    if (params?.nameSearch) queryParams.append("nameSearch", params.nameSearch);
     if (params?.tag) {
-      params.tag.forEach(t => queryParams.append('tag', t));
+      params.tag.forEach((t) => queryParams.append("tag", t));
     }
-    
+
     const fullUrl = `/storage-resources/public?${queryParams}`;
-    console.log('🌐 Research API calling:', `${researchApi.defaults.baseURL}${fullUrl}`);
-    
+    console.log(
+      "🌐 Research API calling:",
+      `${researchApi.defaults.baseURL}${fullUrl}`,
+    );
+
     const response = await researchApi.get(fullUrl);
     return response.data;
   },
@@ -138,12 +160,18 @@ export const researchApiService = {
   },
 
   async createStorageResource(storageResource: any) {
-    const response = await researchApi.post('/storage-resources/', storageResource);
+    const response = await researchApi.post(
+      "/storage-resources/",
+      storageResource,
+    );
     return response.data;
   },
 
   async updateStorageResource(id: string, storageResource: any) {
-    const response = await researchApi.put(`/storage-resources/${id}`, storageResource);
+    const response = await researchApi.put(
+      `/storage-resources/${id}`,
+      storageResource,
+    );
     return response.data;
   },
 
@@ -153,12 +181,16 @@ export const researchApiService = {
   },
 
   async searchStorageResources(keyword: string) {
-    const response = await researchApi.get(`/storage-resources/search?keyword=${encodeURIComponent(keyword)}`);
+    const response = await researchApi.get(
+      `/storage-resources/search?keyword=${encodeURIComponent(keyword)}`,
+    );
     return response.data;
   },
 
   async getStorageResourcesByType(storageType: string) {
-    const response = await researchApi.get(`/storage-resources/type/${storageType}`);
+    const response = await researchApi.get(
+      `/storage-resources/type/${storageType}`,
+    );
     return response.data;
   },
 
@@ -173,7 +205,9 @@ export const researchApiService = {
   },
 
   async getStorageResourceStarCount(id: string) {
-    const response = await researchApi.get(`/storage-resources/${id}/stars/count`);
+    const response = await researchApi.get(
+      `/storage-resources/${id}/stars/count`,
+    );
     return response.data;
   },
 
@@ -185,16 +219,21 @@ export const researchApiService = {
     tag?: string[];
   }) {
     const queryParams = new URLSearchParams();
-    if (params?.pageNumber !== undefined) queryParams.append('pageNumber', params.pageNumber.toString());
-    if (params?.pageSize !== undefined) queryParams.append('pageSize', params.pageSize.toString());
-    if (params?.nameSearch) queryParams.append('nameSearch', params.nameSearch);
+    if (params?.pageNumber !== undefined)
+      queryParams.append("pageNumber", params.pageNumber.toString());
+    if (params?.pageSize !== undefined)
+      queryParams.append("pageSize", params.pageSize.toString());
+    if (params?.nameSearch) queryParams.append("nameSearch", params.nameSearch);
     if (params?.tag) {
-      params.tag.forEach(t => queryParams.append('tag', t));
+      params.tag.forEach((t) => queryParams.append("tag", t));
     }
-    
+
     const fullUrl = `/codes/public?${queryParams}`;
-    console.log('🌐 Research API calling:', `${researchApi.defaults.baseURL}${fullUrl}`);
-    
+    console.log(
+      "🌐 Research API calling:",
+      `${researchApi.defaults.baseURL}${fullUrl}`,
+    );
+
     const response = await researchApi.get(fullUrl);
     return response.data;
   },
@@ -205,7 +244,7 @@ export const researchApiService = {
   },
 
   async createCode(code: any) {
-    const response = await researchApi.post('/codes/', code);
+    const response = await researchApi.post("/codes/", code);
     return response.data;
   },
 
@@ -220,7 +259,9 @@ export const researchApiService = {
   },
 
   async searchCodes(keyword: string) {
-    const response = await researchApi.get(`/codes/search?keyword=${encodeURIComponent(keyword)}`);
+    const response = await researchApi.get(
+      `/codes/search?keyword=${encodeURIComponent(keyword)}`,
+    );
     return response.data;
   },
 

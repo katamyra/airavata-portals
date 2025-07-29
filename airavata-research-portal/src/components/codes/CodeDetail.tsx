@@ -21,12 +21,13 @@ import React, { useState, useEffect } from 'react';
 import { Box, VStack, HStack, Text, Button, Badge, Container } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { researchApiService } from '../../lib/researchApi';
+import { TagV2, normalizeTags } from '../../lib/tagUtils';
 
 interface Code {
   id: number;
   name: string;
   description: string;
-  tags: string[];
+  tags: (string | TagV2)[];
   authors: string[];
   starCount: number;
   codeType: string;
@@ -160,7 +161,7 @@ export const CodeDetail = () => {
                     Tags
                   </Text>
                   <HStack spacing={2} flexWrap="wrap">
-                    {code.tags.map((tag, index) => (
+                    {normalizeTags(code.tags).map((tag, index) => (
                       <Box
                         key={index}
                         bg="#60b4f7"

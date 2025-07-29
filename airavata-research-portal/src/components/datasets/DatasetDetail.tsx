@@ -21,12 +21,13 @@ import React, { useState, useEffect } from 'react';
 import { Box, VStack, HStack, Text, Button, Badge } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { adminApiService } from '../../lib/adminApi';
+import { normalizeTags, TagV2 } from "../../lib/tagUtils";
 
 interface Dataset {
   id: number;
   title: string;
   description: string;
-  tags: string[];
+  tags: (string | TagV2)[];
   authors: string[];
   starCount: number;
   category: string;
@@ -117,8 +118,8 @@ export const DatasetDetail = () => {
 
             {/* Tags */}
             <HStack spacing={2} wrap="wrap">
-              {dataset.tags.map((tag) => (
-                <Badge key={tag} colorScheme="blue" variant="subtle">
+              {normalizeTags(dataset.tags).map((tag, index) => (
+                <Badge key={index} colorScheme="blue" variant="subtle">
                   {tag}
                 </Badge>
               ))}
