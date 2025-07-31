@@ -70,7 +70,6 @@ export const GlobalSidebar = ({ isLoggedIn }: GlobalSidebarProps) => {
   ];
 
   const authenticatedItems = [
-    { icon: "☆", label: "Your Stars", to: "/resources/starred" },
     { icon: "□", label: "Sessions", to: "/sessions" },
     { icon: "+", label: "Add", to: "/add" },
   ];

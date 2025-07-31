@@ -26,8 +26,10 @@ import {
   VStack,
   Flex,
   IconButton,
+  Image,
 } from "@chakra-ui/react";
 import { useAuth } from "react-oidc-context";
+import heroImage from "../../assets/hero-image.png";
 
 
 const StatsCard = ({ number, label, icon, color }: { number: string, label: string, icon: string, color: string }) => (
@@ -102,43 +104,23 @@ export const NewLandingPage = () => {
             </VStack>
           </Box>
 
-          {/* Right Content - Tech Image */}
+          {/* Right Content - Hero Image */}
           <Box flex={1} position="relative">
             <Box
               w="full"
               h="400px"
-              bg="linear-gradient(135deg, #40a9f7 0%, #2e90d9 40%, #60b4fa 100%)"
               borderRadius="2xl"
               position="relative"
               overflow="hidden"
-              backgroundImage="radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 1px, transparent 1px),
-                               radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 1px, transparent 1px),
-                               radial-gradient(circle at 40% 80%, rgba(255,255,255,0.05) 2px, transparent 2px)"
             >
-              {/* Circuit-like patterns */}
-              <Box
-                position="absolute"
-                top="20%"
-                left="10%"
-                w="60%"
-                h="2px"
-                bg="rgba(255,255,255,0.2)"
-              />
-              <Box
-                position="absolute"
-                top="40%"
-                left="30%"
-                w="2px"
-                h="30%"
-                bg="rgba(255,255,255,0.2)"
-              />
-              <Box
-                position="absolute"
-                top="60%"
-                left="20%"
-                w="50%"
-                h="2px"
-                bg="rgba(255,255,255,0.2)"
+              {/* Hero Image */}
+              <Image
+                src={heroImage}
+                alt="CyberShuttle Scientific Computing Platform"
+                w="full"
+                h="full"
+                objectFit="cover"
+                borderRadius="2xl"
               />
 
               {/* Stats Cards positioned like in the image */}
@@ -161,28 +143,6 @@ export const NewLandingPage = () => {
                   color="rgba(255, 255, 255, 0.3)" 
                 />
               </Box>
-
-              {/* Floating elements */}
-              <Box
-                position="absolute"
-                top="25%"
-                right="20%"
-                w={4}
-                h={4}
-                bg="rgba(255,255,255,0.4)"
-                borderRadius="full"
-                animation="pulse 2s infinite"
-              />
-              <Box
-                position="absolute"
-                top="65%"
-                right="60%"
-                w={3}
-                h={3}
-                bg="rgba(255,255,255,0.3)"
-                borderRadius="full"
-                animation="pulse 3s infinite"
-              />
             </Box>
           </Box>
             </Flex>

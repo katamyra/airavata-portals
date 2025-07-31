@@ -24,10 +24,12 @@ import {
   Button,
   Text,
   Spacer,
+  Image,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
+import cybershuttleLogo from "../../assets/cybershuttle-logo.png";
 
 export const Topbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,8 +60,14 @@ export const Topbar = () => {
     >
       <HStack spacing={4} w="full">
         {/* Logo */}
-        <HStack spacing={2} w="250px">
-          <Box w={8} h={8} bg="blue.500" borderRadius="md" />
+        <HStack spacing={3} w="250px">
+          <Image 
+            src={cybershuttleLogo} 
+            alt="Cybershuttle Logo" 
+            w={8} 
+            h={8} 
+            objectFit="contain"
+          />
           <Text fontWeight="bold" fontSize="lg">Cybershuttle</Text>
         </HStack>
 
