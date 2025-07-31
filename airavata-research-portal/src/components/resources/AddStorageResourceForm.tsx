@@ -33,15 +33,22 @@ export const AddStorageResourceForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    hostname: '',
-    storageType: 'Object Storage',
-    capacityTB: 1,
-    accessProtocol: 'S3',
+    storageType: 'S3', // S3 or SCP
+    // S3-specific fields
     endpoint: '',
-    supportsEncryption: false,
-    supportsVersioning: false,
-    additionalInfo: '',
-    resourceManager: ''
+    bucketName: '',
+    accessKey: '',
+    secretKey: '',
+    // SCP-specific fields
+    hostname: '',
+    port: 22,
+    username: '',
+    authenticationMethod: 'SSH_KEY',
+    sshKey: '',
+    remotePath: '',
+    // Common fields
+    resourceManager: '',
+    additionalInfo: ''
   });
 
   useEffect(() => {
@@ -58,15 +65,22 @@ export const AddStorageResourceForm = () => {
       setFormData({
         name: resource.name || '',
         description: resource.description || '',
-        hostname: resource.hostname || '',
-        storageType: resource.storageType || 'Object Storage',
-        capacityTB: resource.capacityTB || 1,
-        accessProtocol: resource.accessProtocol || 'S3',
+        storageType: resource.storageType || 'S3',
+        // S3-specific fields
         endpoint: resource.endpoint || '',
-        supportsEncryption: resource.supportsEncryption || false,
-        supportsVersioning: resource.supportsVersioning || false,
-        additionalInfo: resource.additionalInfo || '',
-        resourceManager: resource.resourceManager || ''
+        bucketName: resource.bucketName || '',
+        accessKey: resource.accessKey || '',
+        secretKey: resource.secretKey || '',
+        // SCP-specific fields
+        hostname: resource.hostname || '',
+        port: resource.port || 22,
+        username: resource.username || '',
+        authenticationMethod: resource.authenticationMethod || 'SSH_KEY',
+        sshKey: resource.sshKey || '',
+        remotePath: resource.remotePath || '',
+        // Common fields
+        resourceManager: resource.resourceManager || '',
+        additionalInfo: resource.additionalInfo || ''
       });
     } catch (error: any) {
       console.error('Failed to load storage resource:', error);
@@ -103,19 +117,40 @@ export const AddStorageResourceForm = () => {
     setLoading(true);
     try {
       // Create object matching v2 StorageResource entity structure
-      const storageResourceData = {
+      const storageResourceData: any = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        hostname: formData.hostname.trim(), // Use 'hostname' to match backend entity
         storageType: formData.storageType,
-        capacityTB: parseInt(formData.capacityTB.toString()),
-        accessProtocol: formData.accessProtocol,
-        endpoint: formData.endpoint.trim(),
-        supportsEncryption: formData.supportsEncryption,
-        supportsVersioning: formData.supportsVersioning,
         resourceManager: formData.resourceManager.trim(),
         additionalInfo: formData.additionalInfo.trim() || null
       };
+
+      // Add type-specific fields
+      if (formData.storageType === 'S3') {
+        storageResourceData.endpoint = formData.endpoint.trim();
+        storageResourceData.bucketName = formData.bucketName.trim();
+        storageResourceData.accessKey = formData.accessKey.trim();
+        storageResourceData.secretKey = formData.secretKey.trim();
+        // Set defaults for S3
+        storageResourceData.hostname = formData.endpoint.trim();
+        storageResourceData.accessProtocol = 'S3';
+        storageResourceData.capacityTB = 1000;
+        storageResourceData.supportsEncryption = true;
+        storageResourceData.supportsVersioning = true;
+      } else if (formData.storageType === 'SCP') {
+        storageResourceData.hostname = formData.hostname.trim();
+        storageResourceData.port = parseInt(formData.port.toString());
+        storageResourceData.username = formData.username.trim();
+        storageResourceData.authenticationMethod = formData.authenticationMethod;
+        storageResourceData.sshKey = formData.sshKey.trim();
+        storageResourceData.remotePath = formData.remotePath.trim();
+        // Set defaults for SCP
+        storageResourceData.endpoint = formData.hostname.trim();
+        storageResourceData.accessProtocol = 'SCP';
+        storageResourceData.capacityTB = 100;
+        storageResourceData.supportsEncryption = false;
+        storageResourceData.supportsVersioning = false;
+      }
 
       console.log(`${isEditMode ? 'Updating' : 'Creating'} storage resource:`, storageResourceData);
       
@@ -189,7 +224,7 @@ export const AddStorageResourceForm = () => {
             </Text>
             
             <Text color="gray.600" textAlign="center" fontSize="sm" maxW="600px" lineHeight="1.6">
-              Provide information about your storage resource. The form will collect the relevant configuration details.
+              Provide a name, description, and select the type of storage you want to register. The form will update to show the relevant fields based on your chosen storage type.
             </Text>
           </VStack>
 
@@ -244,29 +279,6 @@ export const AddStorageResourceForm = () => {
                   </Box>
                 </HStack>
 
-                {/* Hostname */}
-                <HStack spacing={4} align="start">
-                  <Box minW="200px" pt={2}>
-                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                      Hostname <Text as="span" color="red.500">*</Text>
-                    </Text>
-                  </Box>
-                  <Text color="gray.500" pt={2}>:</Text>
-                  <Box flex={1}>
-                    <Input
-                      placeholder="e.g., storage.university.edu"
-                      value={formData.hostname}
-                      onChange={(e) => handleInputChange('hostname', e.target.value)}
-                      bg="white"
-                      border="1px solid"
-                      borderColor="gray.300"
-                      borderRadius="md"
-                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
-                      required
-                    />
-                  </Box>
-                </HStack>
-
                 {/* Storage Type */}
                 <HStack spacing={4} align="start">
                   <Box minW="200px" pt={2}>
@@ -287,138 +299,267 @@ export const AddStorageResourceForm = () => {
                       _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
                       w="full"
                     >
-                      <option value="Object Storage">Object Storage</option>
-                      <option value="File System">File System</option>
-                      <option value="Database">Database</option>
-                      <option value="Block Storage">Block Storage</option>
-                    </Box>
-                  </Box>
-                </HStack>
-
-                {/* Capacity TB */}
-                <HStack spacing={4} align="start">
-                  <Box minW="200px" pt={2}>
-                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                      Capacity (TB) <Text as="span" color="red.500">*</Text>
-                    </Text>
-                  </Box>
-                  <Text color="gray.500" pt={2}>:</Text>
-                  <Box flex={1}>
-                    <Input
-                      type="number"
-                      placeholder="e.g., 100"
-                      value={formData.capacityTB}
-                      onChange={(e) => handleInputChange('capacityTB', parseInt(e.target.value) || 1)}
-                      bg="white"
-                      border="1px solid"
-                      borderColor="gray.300"
-                      borderRadius="md"
-                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
-                      min={1}
-                      required
-                    />
-                  </Box>
-                </HStack>
-
-                {/* Access Protocol */}
-                <HStack spacing={4} align="start">
-                  <Box minW="200px" pt={2}>
-                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                      Access Protocol <Text as="span" color="red.500">*</Text>
-                    </Text>
-                  </Box>
-                  <Text color="gray.500" pt={2}>:</Text>
-                  <Box flex={1}>
-                    <Box as="select" 
-                      value={formData.accessProtocol}
-                      onChange={(e: any) => handleInputChange('accessProtocol', e.target.value)}
-                      bg="white"
-                      border="1px solid"
-                      borderColor="gray.300"
-                      borderRadius="md"
-                      p={2}
-                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
-                      w="full"
-                    >
+                      <option value="">Select</option>
                       <option value="S3">S3</option>
-                      <option value="SFTP">SFTP</option>
-                      <option value="NFS">NFS</option>
-                      <option value="HTTP">HTTP</option>
-                      <option value="HTTPS">HTTPS</option>
+                      <option value="SCP">SCP</option>
                     </Box>
                   </Box>
                 </HStack>
 
-                {/* Endpoint */}
-                <HStack spacing={4} align="start">
-                  <Box minW="200px" pt={2}>
-                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                      Endpoint <Text as="span" color="red.500">*</Text>
-                    </Text>
-                  </Box>
-                  <Text color="gray.500" pt={2}>:</Text>
-                  <Box flex={1}>
-                    <Input
-                      placeholder="e.g., https://s3.amazonaws.com or /mnt/storage"
-                      value={formData.endpoint}
-                      onChange={(e) => handleInputChange('endpoint', e.target.value)}
-                      bg="white"
-                      border="1px solid"
-                      borderColor="gray.300"
-                      borderRadius="md"
-                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
-                      required
-                    />
-                  </Box>
-                </HStack>
+                {/* S3-specific fields */}
+                {formData.storageType === 'S3' && (
+                  <>
+                    {/* Endpoint */}
+                    <HStack spacing={4} align="start">
+                      <Box minW="200px" pt={2}>
+                        <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                          Endpoint <Text as="span" color="red.500">*</Text>
+                        </Text>
+                      </Box>
+                      <Text color="gray.500" pt={2}>:</Text>
+                      <Box flex={1}>
+                        <Input
+                          placeholder="e.g., https://s3.amazonaws.com"
+                          value={formData.endpoint}
+                          onChange={(e) => handleInputChange('endpoint', e.target.value)}
+                          bg="white"
+                          border="1px solid"
+                          borderColor="gray.300"
+                          borderRadius="md"
+                          _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                          required
+                        />
+                      </Box>
+                    </HStack>
 
-                {/* Features */}
-                <HStack spacing={4} align="start">
-                  <Box minW="200px" pt={2}>
-                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                      Features
-                    </Text>
-                  </Box>
-                  <Text color="gray.500" pt={2}>:</Text>
-                  <VStack flex={1} align="stretch" spacing={3}>
-                    <HStack spacing={2} align="center">
-                      <Box
-                        as="input"
-                        type="checkbox"
-                        checked={formData.supportsEncryption}
-                        onChange={(e: any) => handleInputChange('supportsEncryption', e.target.checked)}
-                        w="16px"
-                        h="16px"
-                        bg={formData.supportsEncryption ? "#60B4F7" : "white"}
-                        border="1px solid"
-                        borderColor="gray.300"
-                        borderRadius="sm"
-                        _focus={{ borderColor: "#60B4F7" }}
-                      />
-                      <Text fontSize="sm" color="gray.700">
-                        Supports Encryption
-                      </Text>
+                    {/* Bucket Name */}
+                    <HStack spacing={4} align="start">
+                      <Box minW="200px" pt={2}>
+                        <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                          Bucket Name <Text as="span" color="red.500">*</Text>
+                        </Text>
+                      </Box>
+                      <Text color="gray.500" pt={2}>:</Text>
+                      <Box flex={1}>
+                        <Input
+                          placeholder="e.g., my-research-bucket"
+                          value={formData.bucketName}
+                          onChange={(e) => handleInputChange('bucketName', e.target.value)}
+                          bg="white"
+                          border="1px solid"
+                          borderColor="gray.300"
+                          borderRadius="md"
+                          _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                          required
+                        />
+                      </Box>
                     </HStack>
-                    <HStack spacing={2} align="center">
-                      <Box
-                        as="input"
-                        type="checkbox"
-                        checked={formData.supportsVersioning}
-                        onChange={(e: any) => handleInputChange('supportsVersioning', e.target.checked)}
-                        w="16px"
-                        h="16px"
-                        bg={formData.supportsVersioning ? "#60B4F7" : "white"}
-                        border="1px solid"
-                        borderColor="gray.300"
-                        borderRadius="sm"
-                        _focus={{ borderColor: "#60B4F7" }}
-                      />
-                      <Text fontSize="sm" color="gray.700">
-                        Supports Versioning
-                      </Text>
+
+                    {/* Access Key */}
+                    <HStack spacing={4} align="start">
+                      <Box minW="200px" pt={2}>
+                        <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                          Access Key <Text as="span" color="red.500">*</Text>
+                        </Text>
+                      </Box>
+                      <Text color="gray.500" pt={2}>:</Text>
+                      <Box flex={1}>
+                        <Input
+                          placeholder="e.g., AKIAIOSFODNN7EXAMPLE"
+                          value={formData.accessKey}
+                          onChange={(e) => handleInputChange('accessKey', e.target.value)}
+                          bg="white"
+                          border="1px solid"
+                          borderColor="gray.300"
+                          borderRadius="md"
+                          _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                          required
+                        />
+                      </Box>
                     </HStack>
-                  </VStack>
-                </HStack>
+
+                    {/* Secret Key */}
+                    <HStack spacing={4} align="start">
+                      <Box minW="200px" pt={2}>
+                        <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                          Secret Key <Text as="span" color="red.500">*</Text>
+                        </Text>
+                      </Box>
+                      <Text color="gray.500" pt={2}>:</Text>
+                      <Box flex={1}>
+                        <Input
+                          type="password"
+                          placeholder="Secret access key"
+                          value={formData.secretKey}
+                          onChange={(e) => handleInputChange('secretKey', e.target.value)}
+                          bg="white"
+                          border="1px solid"
+                          borderColor="gray.300"
+                          borderRadius="md"
+                          _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                          required
+                        />
+                      </Box>
+                    </HStack>
+                  </>
+                )}
+
+                {/* SCP-specific fields */}
+                {formData.storageType === 'SCP' && (
+                  <>
+                    {/* Hostname */}
+                    <HStack spacing={4} align="start">
+                      <Box minW="200px" pt={2}>
+                        <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                          Hostname <Text as="span" color="red.500">*</Text>
+                        </Text>
+                      </Box>
+                      <Text color="gray.500" pt={2}>:</Text>
+                      <Box flex={1}>
+                        <Input
+                          placeholder="e.g., cluster.university.edu"
+                          value={formData.hostname}
+                          onChange={(e) => handleInputChange('hostname', e.target.value)}
+                          bg="white"
+                          border="1px solid"
+                          borderColor="gray.300"
+                          borderRadius="md"
+                          _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                          required
+                        />
+                      </Box>
+                    </HStack>
+
+                    {/* Port */}
+                    <HStack spacing={4} align="start">
+                      <Box minW="200px" pt={2}>
+                        <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                          Port <Text as="span" color="red.500">*</Text>
+                        </Text>
+                      </Box>
+                      <Text color="gray.500" pt={2}>:</Text>
+                      <Box flex={1}>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 22"
+                          value={formData.port}
+                          onChange={(e) => handleInputChange('port', parseInt(e.target.value) || 22)}
+                          bg="white"
+                          border="1px solid"
+                          borderColor="gray.300"
+                          borderRadius="md"
+                          _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                          min={1}
+                          max={65535}
+                          required
+                        />
+                      </Box>
+                    </HStack>
+
+                    {/* Username */}
+                    <HStack spacing={4} align="start">
+                      <Box minW="200px" pt={2}>
+                        <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                          Username <Text as="span" color="red.500">*</Text>
+                        </Text>
+                      </Box>
+                      <Text color="gray.500" pt={2}>:</Text>
+                      <Box flex={1}>
+                        <Input
+                          placeholder="e.g., researcher01"
+                          value={formData.username}
+                          onChange={(e) => handleInputChange('username', e.target.value)}
+                          bg="white"
+                          border="1px solid"
+                          borderColor="gray.300"
+                          borderRadius="md"
+                          _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                          required
+                        />
+                      </Box>
+                    </HStack>
+
+                    {/* Authentication Method */}
+                    <HStack spacing={4} align="start">
+                      <Box minW="200px" pt={2}>
+                        <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                          Authentication <Text as="span" color="red.500">*</Text>
+                        </Text>
+                      </Box>
+                      <Text color="gray.500" pt={2}>:</Text>
+                      <Box flex={1}>
+                        <Box as="select" 
+                          value={formData.authenticationMethod}
+                          onChange={(e: any) => handleInputChange('authenticationMethod', e.target.value)}
+                          bg="white"
+                          border="1px solid"
+                          borderColor="gray.300"
+                          borderRadius="md"
+                          p={2}
+                          _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                          w="full"
+                        >
+                          <option value="SSH_KEY">SSH Key</option>
+                          <option value="PASSWORD">Password</option>
+                        </Box>
+                      </Box>
+                    </HStack>
+
+                    {/* SSH Key (only show if SSH_KEY is selected) */}
+                    {formData.authenticationMethod === 'SSH_KEY' && (
+                      <HStack spacing={4} align="start">
+                        <Box minW="200px" pt={2}>
+                          <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                            SSH Key <Text as="span" color="red.500">*</Text>
+                          </Text>
+                        </Box>
+                        <Text color="gray.500" pt={2}>:</Text>
+                        <Box flex={1}>
+                          <Box
+                            as="textarea"
+                            placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----"
+                            value={formData.sshKey}
+                            onChange={(e: any) => handleInputChange('sshKey', e.target.value)}
+                            bg="white"
+                            border="1px solid"
+                            borderColor="gray.300"
+                            borderRadius="md"
+                            p={2}
+                            h="100px"
+                            resize="vertical"
+                            fontFamily="monospace"
+                            fontSize="sm"
+                            _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                            required
+                          />
+                        </Box>
+                      </HStack>
+                    )}
+
+                    {/* Remote Path */}
+                    <HStack spacing={4} align="start">
+                      <Box minW="200px" pt={2}>
+                        <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                          Remote Path <Text as="span" color="red.500">*</Text>
+                        </Text>
+                      </Box>
+                      <Text color="gray.500" pt={2}>:</Text>
+                      <Box flex={1}>
+                        <Input
+                          placeholder="e.g., /home/user/data"
+                          value={formData.remotePath}
+                          onChange={(e) => handleInputChange('remotePath', e.target.value)}
+                          bg="white"
+                          border="1px solid"
+                          borderColor="gray.300"
+                          borderRadius="md"
+                          _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                          required
+                        />
+                      </Box>
+                    </HStack>
+                  </>
+                )}
 
                 {/* Resource Manager */}
                 <HStack spacing={4} align="start">
