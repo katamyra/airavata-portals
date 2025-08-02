@@ -38,7 +38,6 @@ interface Dataset {
   description: string;
   tags: Array<{name: string}>;
   authors: string[];
-  datasetUrl: string;
   headerImage: string;
   createdAt: string;
   updatedAt: string;
@@ -84,7 +83,6 @@ export const Datasets = () => {
   const handleStar = async (id: string) => {
     try {
       await v1ApiService.starDataset(id);
-      // V1 API doesn't have star count, so we just log the action
       console.log("Dataset starred:", id);
       // Refresh datasets to get any updates
       fetchDatasets();
