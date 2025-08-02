@@ -66,6 +66,7 @@ export const GlobalSidebar = ({ isLoggedIn }: GlobalSidebarProps) => {
     { icon: "⌂", label: "Home", to: "/" },
     { icon: "💻", label: "Code", to: "/codes" },
     { icon: "▦", label: "Datasets", to: "/resources/datasets" },
+    { icon: "📚", label: "Catalog", to: "/catalog" },
     { icon: "◈", label: "Resources", to: "/resources" },
   ];
 

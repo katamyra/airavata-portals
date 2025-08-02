@@ -36,7 +36,7 @@ interface Dataset {
   id: string;
   name: string;
   description: string;
-  tags: Array<{name: string}>;
+  tags: Array<{name?: string; value?: string} | string>;
   authors: string[];
   headerImage: string;
   createdAt: string;
@@ -95,7 +95,7 @@ export const Datasets = () => {
     ? datasets 
     : datasets.filter(dataset => {
         // Filter by tags since v1 API doesn't have category field
-        const tagNames = dataset.tags.map(tag => tag.name.toLowerCase());
+        const tagNames = dataset.tags.map(tag => (tag.name || tag.value || tag).toLowerCase());
         const filterKey = activeFilter.toLowerCase().replace(" ", "_");
         return tagNames.some(tag => tag.includes(filterKey) || tag.includes(activeFilter.toLowerCase()));
       });
@@ -230,7 +230,7 @@ export const Datasets = () => {
                   id={dataset.id}
                   title={dataset.name}
                   description={dataset.description}
-                  tags={dataset.tags.map(tag => tag.name)}
+                  tags={dataset.tags.map(tag => tag.name || tag.value || tag)}
                   authors={dataset.authors}
                   starCount={0} // V1 API doesn't have star count
                   onStar={handleStar}

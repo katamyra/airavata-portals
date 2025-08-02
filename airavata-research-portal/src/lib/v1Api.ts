@@ -90,5 +90,74 @@ export const v1ApiService = {
   async getStarredResources(userId: string) {
     const response = await v1Api.get(`/resources/${userId}/stars`);
     return response.data; // Returns List<Resource>
+  },
+
+  // Model endpoints using v1 API
+  async getModels(pageNumber = 0, pageSize = 50, nameSearch = '') {
+    const params = new URLSearchParams({
+      pageNumber: pageNumber.toString(),
+      pageSize: pageSize.toString(),
+      nameSearch: nameSearch,
+      type: 'MODEL'
+    });
+    
+    const response = await v1Api.get(`/resources/public?${params}`);
+    return response.data;
+  },
+
+  async getModelById(id: string) {
+    const response = await v1Api.get(`/resources/public/${id}`);
+    return response.data;
+  },
+
+  async searchModels(keyword: string) {
+    const response = await v1Api.get(`/resources/search?type=MODEL&name=${encodeURIComponent(keyword)}`);
+    return response.data;
+  },
+
+  // Repository endpoints using v1 API
+  async getRepositories(pageNumber = 0, pageSize = 50, nameSearch = '') {
+    const params = new URLSearchParams({
+      pageNumber: pageNumber.toString(),
+      pageSize: pageSize.toString(),
+      nameSearch: nameSearch,
+      type: 'REPOSITORY'
+    });
+    
+    const response = await v1Api.get(`/resources/public?${params}`);
+    return response.data;
+  },
+
+  async getRepositoryById(id: string) {
+    const response = await v1Api.get(`/resources/public/${id}`);
+    return response.data;
+  },
+
+  async searchRepositories(keyword: string) {
+    const response = await v1Api.get(`/resources/search?type=REPOSITORY&name=${encodeURIComponent(keyword)}`);
+    return response.data;
+  },
+
+  // Notebook endpoints using v1 API
+  async getNotebooks(pageNumber = 0, pageSize = 50, nameSearch = '') {
+    const params = new URLSearchParams({
+      pageNumber: pageNumber.toString(),
+      pageSize: pageSize.toString(),
+      nameSearch: nameSearch,
+      type: 'NOTEBOOK'
+    });
+    
+    const response = await v1Api.get(`/resources/public?${params}`);
+    return response.data;
+  },
+
+  async getNotebookById(id: string) {
+    const response = await v1Api.get(`/resources/public/${id}`);
+    return response.data;
+  },
+
+  async searchNotebooks(keyword: string) {
+    const response = await v1Api.get(`/resources/search?type=NOTEBOOK&name=${encodeURIComponent(keyword)}`);
+    return response.data;
   }
 };

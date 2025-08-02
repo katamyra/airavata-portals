@@ -19,11 +19,11 @@
 
 /**
  * TagV2 interface representing backend tag objects
- * Uses 'value' to match v1 Tag entity property name
+ * Uses 'name' to match actual JSON response from Tag entity
  */
 export interface TagV2 {
   id: string;
-  value: string;
+  name: string;
 }
 
 /**
@@ -31,7 +31,7 @@ export interface TagV2 {
  * Handles both legacy string tags and new TagV2 objects
  */
 export const normalizeTag = (tag: string | TagV2): string => {
-  return typeof tag === 'string' ? tag : tag.value;
+  return typeof tag === 'string' ? tag : tag.name;
 };
 
 /**
@@ -46,5 +46,5 @@ export const normalizeTags = (tags: (string | TagV2)[]): string[] => {
  * Type guard to check if a tag is a TagV2 object
  */
 export const isTagV2 = (tag: string | TagV2): tag is TagV2 => {
-  return typeof tag === 'object' && tag !== null && 'value' in tag;
+  return typeof tag === 'object' && tag !== null && 'name' in tag;
 };
