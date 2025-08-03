@@ -57,19 +57,23 @@ export const AddStorageResourceForm = () => {
   const isEditMode = !!id;
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    // Backend sets default for storageType
-    storageType: '',
-    // S3-specific fields
+    storageResourceDescription: '',
+    hostName: '',
+    storageType: 'S3',
+    // Required fields for all storage types
+    accessProtocol: 'HTTPS',
+    capacityTB: 1,
     endpoint: '',
+    // S3-specific fields
     bucketName: '',
     accessKey: '',
     secretKey: '',
+    supportsEncryption: true,
+    supportsVersioning: true,
     // SCP-specific fields
-    hostname: '',
-    port: '',
+    port: 22,
     username: '',
-    authenticationMethod: '',
+    authenticationMethod: 'SSH_KEY',
     sshKey: '',
     remotePath: '',
     // Common fields
@@ -90,15 +94,20 @@ export const AddStorageResourceForm = () => {
       
       setFormData({
         name: resource.name || '',
-        description: resource.description || '',
+        storageResourceDescription: resource.storageResourceDescription || '',
+        hostName: resource.hostName || '',
         storageType: resource.storageType || 'S3',
-        // S3-specific fields
+        // Required fields
+        accessProtocol: resource.accessProtocol || (resource.storageType === 'S3' ? 'HTTPS' : 'SCP'),
+        capacityTB: resource.capacityTB || 1,
         endpoint: resource.endpoint || '',
+        // S3-specific fields
         bucketName: resource.bucketName || '',
         accessKey: resource.accessKey || '',
         secretKey: resource.secretKey || '',
+        supportsEncryption: resource.supportsEncryption !== undefined ? resource.supportsEncryption : true,
+        supportsVersioning: resource.supportsVersioning !== undefined ? resource.supportsVersioning : true,
         // SCP-specific fields
-        hostname: resource.hostname || '',
         port: resource.port || 22,
         username: resource.username || '',
         authenticationMethod: resource.authenticationMethod || 'SSH_KEY',
@@ -131,7 +140,8 @@ export const AddStorageResourceForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim() || !formData.description.trim()) {
+    // Basic validation
+    if (!formData.name.trim() || !formData.storageResourceDescription.trim()) {
       toaster.create({
         title: "Validation Error",
         description: "Please fill in name and description",
@@ -140,31 +150,78 @@ export const AddStorageResourceForm = () => {
       return;
     }
 
+    // Storage type specific validation
+    if (formData.storageType === 'S3') {
+      if (!formData.endpoint.trim() || !formData.bucketName.trim() || !formData.accessKey.trim() || !formData.secretKey.trim()) {
+        toaster.create({
+          title: "Validation Error",
+          description: "Please fill in all S3 fields: endpoint, bucket name, access key, and secret key",
+          type: "error",
+        });
+        return;
+      }
+    } else if (formData.storageType === 'SCP') {
+      if (!formData.hostName.trim() || !formData.username.trim() || !formData.remotePath.trim()) {
+        toaster.create({
+          title: "Validation Error",
+          description: "Please fill in all SCP fields: hostname, username, and remote path",
+          type: "error",
+        });
+        return;
+      }
+      if (formData.authenticationMethod === 'SSH_KEY' && !formData.sshKey.trim()) {
+        toaster.create({
+          title: "Validation Error",
+          description: "Please provide SSH key for SSH key authentication",
+          type: "error",
+        });
+        return;
+      }
+    }
+
+    // Validate required fields for all storage types
+    if (!formData.accessProtocol || formData.capacityTB < 1) {
+      toaster.create({
+        title: "Validation Error",
+        description: "Please ensure access protocol is selected and capacity is at least 1 TB",
+        type: "error",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      // Create object matching v2 StorageResource entity structure
+      // Create object matching StorageResourceDTO structure exactly
       const storageResourceData: any = {
         name: formData.name.trim(),
-        description: formData.description.trim(),
+        hostName: formData.hostName.trim() || (formData.storageType === 'S3' ? formData.endpoint.trim() : formData.hostName.trim()),
+        storageResourceDescription: formData.storageResourceDescription.trim(),
         storageType: formData.storageType,
-        resourceManager: formData.resourceManager.trim(),
+        // Required fields for all storage types
+        accessProtocol: formData.accessProtocol,
+        capacityTB: parseInt(formData.capacityTB.toString()) || 1,
+        endpoint: formData.endpoint.trim(),
+        resourceManager: formData.resourceManager.trim() || 'Default Resource Manager',
         additionalInfo: formData.additionalInfo.trim() || null
       };
 
-      // Add type-specific fields (backend sets capacity, encryption, etc. defaults)
+      // Add type-specific fields based on storage type
       if (formData.storageType === 'S3') {
-        storageResourceData.endpoint = formData.endpoint.trim();
         storageResourceData.bucketName = formData.bucketName.trim();
         storageResourceData.accessKey = formData.accessKey.trim();
         storageResourceData.secretKey = formData.secretKey.trim();
-        storageResourceData.hostname = formData.endpoint.trim();
+        storageResourceData.supportsEncryption = formData.supportsEncryption;
+        storageResourceData.supportsVersioning = formData.supportsVersioning;
+        // For S3, hostName should be the endpoint
+        storageResourceData.hostName = formData.endpoint.trim();
       } else if (formData.storageType === 'SCP') {
-        storageResourceData.hostname = formData.hostname.trim();
         storageResourceData.port = parseInt(formData.port.toString()) || 22;
         storageResourceData.username = formData.username.trim();
         storageResourceData.authenticationMethod = formData.authenticationMethod;
         storageResourceData.sshKey = formData.sshKey.trim();
         storageResourceData.remotePath = formData.remotePath.trim();
+        // For SCP, endpoint should be the hostname
+        storageResourceData.endpoint = formData.hostName.trim();
       }
 
       console.log(`${isEditMode ? 'Updating' : 'Creating'} storage resource:`, storageResourceData);
@@ -271,6 +328,29 @@ export const AddStorageResourceForm = () => {
                   </Box>
                 </HStack>
 
+                {/* Hostname */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Hostname <Text as="span" color="red.500">*</Text>
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Input
+                      placeholder="e.g., storage.university.edu"
+                      value={formData.hostName}
+                      onChange={(e) => handleInputChange('hostName', e.target.value)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                      required
+                    />
+                  </Box>
+                </HStack>
+
                 {/* Description */}
                 <HStack spacing={4} align="start">
                   <Box minW="200px" pt={2}>
@@ -282,8 +362,8 @@ export const AddStorageResourceForm = () => {
                   <Box flex={1}>
                     <Input
                       placeholder="Brief description of the storage resource"
-                      value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      value={formData.storageResourceDescription}
+                      onChange={(e) => handleInputChange('storageResourceDescription', e.target.value)}
                       bg="white"
                       border="1px solid"
                       borderColor="gray.300"
@@ -305,7 +385,16 @@ export const AddStorageResourceForm = () => {
                   <Box flex={1}>
                     <Box as="select" 
                       value={formData.storageType}
-                      onChange={(e: any) => handleInputChange('storageType', e.target.value)}
+                      onChange={(e: any) => {
+                        const newType = e.target.value;
+                        handleInputChange('storageType', newType);
+                        // Update access protocol based on storage type
+                        if (newType === 'S3') {
+                          handleInputChange('accessProtocol', 'HTTPS');
+                        } else if (newType === 'SCP') {
+                          handleInputChange('accessProtocol', 'SCP');
+                        }
+                      }}
                       bg="white"
                       border="1px solid"
                       borderColor="gray.300"
@@ -314,10 +403,69 @@ export const AddStorageResourceForm = () => {
                       _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
                       w="full"
                     >
-                      <option value="">Select</option>
                       <option value="S3">S3</option>
                       <option value="SCP">SCP</option>
                     </Box>
+                  </Box>
+                </HStack>
+
+                {/* Access Protocol */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Access Protocol <Text as="span" color="red.500">*</Text>
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Box as="select" 
+                      value={formData.accessProtocol}
+                      onChange={(e: any) => handleInputChange('accessProtocol', e.target.value)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      p={2}
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                      w="full"
+                    >
+                      {formData.storageType === 'S3' ? (
+                        <>
+                          <option value="HTTPS">HTTPS</option>
+                          <option value="HTTP">HTTP</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="SCP">SCP</option>
+                          <option value="SFTP">SFTP</option>
+                        </>
+                      )}
+                    </Box>
+                  </Box>
+                </HStack>
+
+                {/* Capacity */}
+                <HStack spacing={4} align="start">
+                  <Box minW="200px" pt={2}>
+                    <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                      Capacity (TB) <Text as="span" color="red.500">*</Text>
+                    </Text>
+                  </Box>
+                  <Text color="gray.500" pt={2}>:</Text>
+                  <Box flex={1}>
+                    <Input
+                      type="number"
+                      placeholder="Storage capacity in terabytes"
+                      value={formData.capacityTB}
+                      onChange={(e) => handleInputChange('capacityTB', parseInt(e.target.value) || 1)}
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.300"
+                      borderRadius="md"
+                      _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                      min={1}
+                      required
+                    />
                   </Box>
                 </HStack>
 
@@ -416,34 +564,54 @@ export const AddStorageResourceForm = () => {
                         />
                       </Box>
                     </HStack>
+
+                    {/* Supports Encryption */}
+                    <HStack spacing={4} align="start">
+                      <Box minW="200px" pt={2}>
+                        <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                          Supports Encryption
+                        </Text>
+                      </Box>
+                      <Text color="gray.500" pt={2}>:</Text>
+                      <Box flex={1}>
+                        <HStack spacing={2}>
+                          <input
+                            type="checkbox"
+                            checked={formData.supportsEncryption}
+                            onChange={(e) => handleInputChange('supportsEncryption', e.target.checked)}
+                            style={{ accentColor: "#60B4F7" }}
+                          />
+                          <Text fontSize="sm" color="gray.600">Storage supports encryption</Text>
+                        </HStack>
+                      </Box>
+                    </HStack>
+
+                    {/* Supports Versioning */}
+                    <HStack spacing={4} align="start">
+                      <Box minW="200px" pt={2}>
+                        <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                          Supports Versioning
+                        </Text>
+                      </Box>
+                      <Text color="gray.500" pt={2}>:</Text>
+                      <Box flex={1}>
+                        <HStack spacing={2}>
+                          <input
+                            type="checkbox"
+                            checked={formData.supportsVersioning}
+                            onChange={(e) => handleInputChange('supportsVersioning', e.target.checked)}
+                            style={{ accentColor: "#60B4F7" }}
+                          />
+                          <Text fontSize="sm" color="gray.600">Storage supports versioning</Text>
+                        </HStack>
+                      </Box>
+                    </HStack>
                   </>
                 )}
 
                 {/* SCP-specific fields */}
                 {formData.storageType === 'SCP' && (
                   <>
-                    {/* Hostname */}
-                    <HStack spacing={4} align="start">
-                      <Box minW="200px" pt={2}>
-                        <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                          Hostname <Text as="span" color="red.500">*</Text>
-                        </Text>
-                      </Box>
-                      <Text color="gray.500" pt={2}>:</Text>
-                      <Box flex={1}>
-                        <Input
-                          placeholder="e.g., cluster.university.edu"
-                          value={formData.hostname}
-                          onChange={(e) => handleInputChange('hostname', e.target.value)}
-                          bg="white"
-                          border="1px solid"
-                          borderColor="gray.300"
-                          borderRadius="md"
-                          _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
-                          required
-                        />
-                      </Box>
-                    </HStack>
 
                     {/* Port */}
                     <HStack spacing={4} align="start">
@@ -580,13 +748,13 @@ export const AddStorageResourceForm = () => {
                 <HStack spacing={4} align="start">
                   <Box minW="200px" pt={2}>
                     <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                      Resource Manager <Text as="span" color="red.500">*</Text>
+                      Resource Manager
                     </Text>
                   </Box>
                   <Text color="gray.500" pt={2}>:</Text>
                   <Box flex={1}>
                     <Input
-                      placeholder="e.g., University IT Department"
+                      placeholder="e.g., University IT Department (optional)"
                       value={formData.resourceManager}
                       onChange={(e) => handleInputChange('resourceManager', e.target.value)}
                       bg="white"
@@ -594,7 +762,6 @@ export const AddStorageResourceForm = () => {
                       borderColor="gray.300"
                       borderRadius="md"
                       _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
-                      required
                     />
                   </Box>
                 </HStack>

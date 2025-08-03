@@ -64,9 +64,8 @@ export const GlobalSidebar = ({ isLoggedIn }: GlobalSidebarProps) => {
 
   const publicItems = [
     { icon: "⌂", label: "Home", to: "/" },
-    { icon: "💻", label: "Code", to: "/codes" },
-    { icon: "▦", label: "Datasets", to: "/resources/datasets" },
     { icon: "📚", label: "Catalog", to: "/catalog" },
+    { icon: "▦", label: "Datasets", to: "/resources/datasets" },
     { icon: "◈", label: "Resources", to: "/resources" },
   ];
 
@@ -75,9 +74,7 @@ export const GlobalSidebar = ({ isLoggedIn }: GlobalSidebarProps) => {
     { icon: "+", label: "Add", to: "/add" },
   ];
 
-  const moreItems = [
-    { icon: "◐", label: "Your Activity", to: "/activity" },
-  ];
+  const moreItems: { icon: string; label: string; to: string }[] = [];
 
   return (
     <Box
@@ -93,17 +90,6 @@ export const GlobalSidebar = ({ isLoggedIn }: GlobalSidebarProps) => {
       zIndex={1000}
     >
       <VStack spacing={6} align="stretch" h="full">
-        {/* Create New Button */}
-        <Button
-          bg="#40a9f7"
-          color="white"
-          size="sm"
-          w="full"
-          leftIcon={<Text>+</Text>}
-          _hover={{ bg: "#2e90d9" }}
-        >
-          Create New
-        </Button>
 
         {/* Navigation Items */}
         <VStack spacing={1} align="stretch">
@@ -129,21 +115,6 @@ export const GlobalSidebar = ({ isLoggedIn }: GlobalSidebarProps) => {
           </VStack>
         )}
 
-        {/* More Section */}
-        <Box>
-          <Text fontSize="sm" fontWeight="medium" color="gray.500" mb={2} px={3}>
-            More
-          </Text>
-          <VStack spacing={1} align="stretch">
-            {moreItems.map((item) => (
-              <SidebarItem
-                key={item.to}
-                {...item}
-                isActive={location.pathname === item.to}
-              />
-            ))}
-          </VStack>
-        </Box>
 
         <Spacer />
 

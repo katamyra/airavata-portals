@@ -397,21 +397,28 @@ export const AddComputeResourceForm: React.FC = () => {
   const [formData, setFormData] = useState({
     // Step 1 fields
     name: '',
+    hostName: '',
     hostAliases: [''],
     ipAddresses: [''],
-    description: '',
+    resourceDescription: '',
     sshUsername: '',
     sshKey: '',
     
-    // Step 2 fields (backend sets defaults for these)
-    sshPort: '',
-    authenticationMethod: '',
-    workingDirectory: '',
-    schedulerType: '',
-    dataMovementProtocol: '',
+    // Required backend fields
+    computeType: 'HPC',
+    cpuCores: 1,
+    memoryGB: 1,
+    operatingSystem: 'Linux',
+    queueSystem: 'SLURM',
     
-    // Backend compatibility fields (backend sets defaults)
-    hostname: '',
+    // Step 2 fields 
+    sshPort: 22,
+    authenticationMethod: 'SSH_KEY',
+    workingDirectory: '/tmp',
+    schedulerType: 'SLURM',
+    dataMovementProtocol: 'SCP',
+    
+    // Backend compatibility fields
     additionalInfo: '',
     resourceManager: ''
   });
@@ -429,18 +436,24 @@ export const AddComputeResourceForm: React.FC = () => {
       
       setFormData({
         name: resource.name || '',
+        hostName: resource.hostName || '',
         hostAliases: resource.hostAliases || [''],
         ipAddresses: resource.ipAddresses || [''], 
-        description: resource.description || '',
+        resourceDescription: resource.resourceDescription || '',
         sshUsername: resource.sshUsername || '',
         sshPort: resource.sshPort || 22,
-        authenticationMethod: resource.authenticationMethod || '',
+        authenticationMethod: resource.authenticationMethod || 'SSH_KEY',
         sshKey: resource.sshKey || '',
-        workingDirectory: resource.workingDirectory || '',
-        schedulerType: resource.schedulerType || '',
-        dataMovementProtocol: resource.dataMovementProtocol || '',
+        // Required backend fields
+        computeType: resource.computeType || 'HPC',
+        cpuCores: resource.cpuCores || 1,
+        memoryGB: resource.memoryGB || 1,
+        operatingSystem: resource.operatingSystem || 'Linux',
+        queueSystem: resource.queueSystem || 'SLURM',
+        workingDirectory: resource.workingDirectory || '/tmp',
+        schedulerType: resource.schedulerType || 'SLURM',
+        dataMovementProtocol: resource.dataMovementProtocol || 'SCP',
         // Backend compatibility fields
-        hostname: resource.hostname || '',
         additionalInfo: resource.additionalInfo || '',
         resourceManager: resource.resourceManager || ''
       });
@@ -520,26 +533,70 @@ export const AddComputeResourceForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (!formData.name.trim() || !formData.hostName.trim() || !formData.resourceDescription.trim() || !formData.sshUsername.trim() || !formData.workingDirectory.trim()) {
+      toaster.create({
+        title: "Validation Error",
+        description: "Please fill in all required fields: name, hostname, description, SSH username, and working directory",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!formData.computeType || !formData.operatingSystem || !formData.queueSystem) {
+      toaster.create({
+        title: "Validation Error",
+        description: "Please select compute type, operating system, and queue system",
+        type: "error",
+      });
+      return;
+    }
+
+    if (formData.cpuCores < 1 || formData.memoryGB < 1) {
+      toaster.create({
+        title: "Validation Error",
+        description: "CPU cores and memory must be at least 1",
+        type: "error",
+      });
+      return;
+    }
+
+    if (formData.authenticationMethod === 'SSH_KEY' && !formData.sshKey.trim()) {
+      toaster.create({
+        title: "Validation Error",
+        description: "Please provide SSH key for SSH key authentication",
+        type: "error",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Create object matching v2 ComputeResource entity structure
+      // Create object matching ComputeResourceDTO structure exactly
       const computeResourceData = {
-        name: formData.name,
-        description: formData.description,
-        hostname: formData.name.toLowerCase().replace(/\s+/g, '-') + '.compute.edu', // Auto-generate hostname
+        name: formData.name.trim(),
+        hostName: formData.hostName.trim() || formData.name.toLowerCase().replace(/\s+/g, '-') + '.compute.edu',
+        resourceDescription: formData.resourceDescription.trim(),
         hostAliases: formData.hostAliases.filter(alias => alias.trim() !== ''),
         ipAddresses: formData.ipAddresses.filter(ip => ip.trim() !== ''),
-        sshUsername: formData.sshUsername,
-        sshPort: formData.sshPort,
+        // Required backend fields
+        computeType: formData.computeType,
+        cpuCores: parseInt(formData.cpuCores.toString()) || 1,
+        memoryGB: parseInt(formData.memoryGB.toString()) || 1,
+        operatingSystem: formData.operatingSystem,
+        queueSystem: formData.queueSystem,
+        // SSH configuration
+        sshUsername: formData.sshUsername.trim(),
+        sshPort: parseInt(formData.sshPort.toString()) || 22,
         authenticationMethod: formData.authenticationMethod,
-        sshKey: formData.sshKey,
-        workingDirectory: formData.workingDirectory,
+        sshKey: formData.sshKey.trim(),
+        workingDirectory: formData.workingDirectory.trim(),
         schedulerType: formData.schedulerType,
         dataMovementProtocol: formData.dataMovementProtocol,
-        // Backend sets defaults for these fields
-        resourceManager: formData.resourceManager,
-        additionalInfo: formData.additionalInfo,
+        resourceManager: formData.resourceManager.trim() || 'Default Resource Manager',
+        additionalInfo: formData.additionalInfo.trim() || null,
         queues: queues
       };
 
@@ -667,19 +724,42 @@ export const AddComputeResourceForm: React.FC = () => {
               
               {currentStep === 1 && (
                 <VStack spacing={6} align="stretch">
+                  {/* Resource Name */}
+                  <HStack spacing={4} align="start">
+                    <Box minW="200px" pt={2}>
+                      <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                        Resource Name <Text as="span" color="red.500">*</Text>
+                      </Text>
+                    </Box>
+                    <Text color="gray.500" pt={2}>:</Text>
+                    <Box flex={1}>
+                      <Input
+                        placeholder="e.g., University HPC Cluster"
+                        value={formData.name}
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        bg="white"
+                        border="1px solid"
+                        borderColor="gray.300"
+                        borderRadius="md"
+                        _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                        required
+                      />
+                    </Box>
+                  </HStack>
+
                   {/* Host Name */}
                   <HStack spacing={4} align="start">
                     <Box minW="200px" pt={2}>
                       <Text fontSize="sm" color="gray.700" fontWeight="medium">
-                        Host Name <Text as="span" color="red.500">*</Text>
+                        Hostname <Text as="span" color="red.500">*</Text>
                       </Text>
                     </Box>
                     <Text color="gray.500" pt={2}>:</Text>
                     <Box flex={1}>
                       <Input
                         placeholder="Hostname or IP address"
-                        value={formData.name}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        value={formData.hostName}
+                        onChange={(e) => handleInputChange('hostName', e.target.value)}
                         bg="white"
                         border="1px solid"
                         borderColor="gray.300"
@@ -783,20 +863,23 @@ export const AddComputeResourceForm: React.FC = () => {
                   {/* Resource Description */}
                   <HStack spacing={4} align="start">
                     <Box minW="200px" pt={2}>
-                      <Text fontSize="sm" color="gray.700" fontWeight="medium">Resource description</Text>
+                      <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                        Resource Description <Text as="span" color="red.500">*</Text>
+                      </Text>
                     </Box>
                     <Text color="gray.500" pt={2}>:</Text>
                     <Box flex={1}>
                       <Textarea
                         placeholder="Brief description of the compute resource"
-                        value={formData.description}
-                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        value={formData.resourceDescription}
+                        onChange={(e) => handleInputChange('resourceDescription', e.target.value)}
                         bg="white"
                         border="1px solid"
                         borderColor="gray.300"
                         borderRadius="md"
                         _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
                         rows={3}
+                        required
                       />
                     </Box>
                   </HStack>
@@ -886,6 +969,141 @@ export const AddComputeResourceForm: React.FC = () => {
                           />
                         )}
                       </HStack>
+                    </Box>
+                  </HStack>
+
+                  {/* Compute Type */}
+                  <HStack spacing={4} align="start">
+                    <Box minW="200px" pt={2}>
+                      <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                        Compute Type <Text as="span" color="red.500">*</Text>
+                      </Text>
+                    </Box>
+                    <Text color="gray.500" pt={2}>:</Text>
+                    <Box flex={1}>
+                      <Box as="select" 
+                        value={formData.computeType}
+                        onChange={(e: any) => handleInputChange('computeType', e.target.value)}
+                        bg="white"
+                        border="1px solid"
+                        borderColor="gray.300"
+                        borderRadius="md"
+                        p={2}
+                        _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                        w="full"
+                      >
+                        <option value="HPC">HPC</option>
+                        <option value="Cloud">Cloud</option>
+                        <option value="Local">Local</option>
+                        <option value="Cluster">Cluster</option>
+                      </Box>
+                    </Box>
+                  </HStack>
+
+                  {/* CPU Cores */}
+                  <HStack spacing={4} align="start">
+                    <Box minW="200px" pt={2}>
+                      <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                        CPU Cores <Text as="span" color="red.500">*</Text>
+                      </Text>
+                    </Box>
+                    <Text color="gray.500" pt={2}>:</Text>
+                    <Box flex={1}>
+                      <Input
+                        type="number"
+                        placeholder="Number of CPU cores"
+                        value={formData.cpuCores}
+                        onChange={(e) => handleInputChange('cpuCores', parseInt(e.target.value) || 1)}
+                        bg="white"
+                        border="1px solid"
+                        borderColor="gray.300"
+                        borderRadius="md"
+                        _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                        min={1}
+                        required
+                      />
+                    </Box>
+                  </HStack>
+
+                  {/* Memory GB */}
+                  <HStack spacing={4} align="start">
+                    <Box minW="200px" pt={2}>
+                      <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                        Memory (GB) <Text as="span" color="red.500">*</Text>
+                      </Text>
+                    </Box>
+                    <Text color="gray.500" pt={2}>:</Text>
+                    <Box flex={1}>
+                      <Input
+                        type="number"
+                        placeholder="Memory in gigabytes"
+                        value={formData.memoryGB}
+                        onChange={(e) => handleInputChange('memoryGB', parseInt(e.target.value) || 1)}
+                        bg="white"
+                        border="1px solid"
+                        borderColor="gray.300"
+                        borderRadius="md"
+                        _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                        min={1}
+                        required
+                      />
+                    </Box>
+                  </HStack>
+
+                  {/* Operating System */}
+                  <HStack spacing={4} align="start">
+                    <Box minW="200px" pt={2}>
+                      <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                        Operating System <Text as="span" color="red.500">*</Text>
+                      </Text>
+                    </Box>
+                    <Text color="gray.500" pt={2}>:</Text>
+                    <Box flex={1}>
+                      <Box as="select" 
+                        value={formData.operatingSystem}
+                        onChange={(e: any) => handleInputChange('operatingSystem', e.target.value)}
+                        bg="white"
+                        border="1px solid"
+                        borderColor="gray.300"
+                        borderRadius="md"
+                        p={2}
+                        _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                        w="full"
+                      >
+                        <option value="Linux">Linux</option>
+                        <option value="Windows">Windows</option>
+                        <option value="macOS">macOS</option>
+                        <option value="Unix">Unix</option>
+                      </Box>
+                    </Box>
+                  </HStack>
+
+                  {/* Queue System */}
+                  <HStack spacing={4} align="start">
+                    <Box minW="200px" pt={2}>
+                      <Text fontSize="sm" color="gray.700" fontWeight="medium">
+                        Queue System <Text as="span" color="red.500">*</Text>
+                      </Text>
+                    </Box>
+                    <Text color="gray.500" pt={2}>:</Text>
+                    <Box flex={1}>
+                      <Box as="select" 
+                        value={formData.queueSystem}
+                        onChange={(e: any) => handleInputChange('queueSystem', e.target.value)}
+                        bg="white"
+                        border="1px solid"
+                        borderColor="gray.300"
+                        borderRadius="md"
+                        p={2}
+                        _focus={{ borderColor: "#60B4F7", boxShadow: "0 0 0 1px #60B4F7" }}
+                        w="full"
+                      >
+                        <option value="SLURM">SLURM</option>
+                        <option value="PBS">PBS</option>
+                        <option value="SGE">SGE</option>
+                        <option value="TORQUE">TORQUE</option>
+                        <option value="LSF">LSF</option>
+                      </Box>
                     </Box>
                   </HStack>
 

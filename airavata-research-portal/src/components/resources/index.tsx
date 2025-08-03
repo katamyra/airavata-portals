@@ -33,19 +33,19 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 interface StorageResource {
   id: string;
   name: string;
-  storage: string;
+  hostName: string;
   storageType: string;
-  status: string;
-  description: string;
+  enabled: boolean;
+  storageResourceDescription: string;
 }
 
 interface ComputeResource {
   id: string;
   name: string;
-  compute: string;
+  hostName: string;
   computeType: string;
-  status: string;
-  description: string;
+  enabled: boolean;
+  resourceDescription: string;
 }
 
 export const Resources = () => {
@@ -108,13 +108,8 @@ export const Resources = () => {
     ))];
     
     const statuses = [...new Set(currentResources.map(resource => {
-      // Handle both old status string format and new isActive boolean format
-      if (typeof resource.status === 'string') {
-        return resource.status;
-      } else if (typeof resource.isActive === 'boolean') {
-        return resource.isActive ? "Active" : "Inactive";
-      }
-      return "Unknown";
+      // Handle enabled boolean format
+      return resource.enabled ? "Active" : "Inactive";
     }))];
     
     return { types, statuses };
@@ -129,10 +124,8 @@ export const Resources = () => {
         (activeTab === "storage" ? resource.storageType === typeFilter : resource.computeType === typeFilter);
       
       const statusMatch = statusFilter === "All" || 
-        (typeof resource.status === 'string' && resource.status === statusFilter) ||
-        (typeof resource.isActive === 'boolean' && 
-         ((statusFilter === "Active" && resource.isActive) || 
-          (statusFilter === "Inactive" && !resource.isActive)));
+        ((statusFilter === "Active" && resource.enabled) || 
+         (statusFilter === "Inactive" && !resource.enabled));
       
       return typeMatch && statusMatch;
     });
@@ -145,22 +138,8 @@ export const Resources = () => {
   }, [activeTab]);
 
   const getStatusColor = (resource) => {
-    // Handle both old status string format and new isActive boolean format
-    if (typeof resource.status === 'string') {
-      switch (resource.status.toLowerCase()) {
-        case "active":
-          return "green";
-        case "full":
-          return "red";
-        case "archived":
-          return "yellow";
-        default:
-          return "gray";
-      }
-    } else if (typeof resource.isActive === 'boolean') {
-      return resource.isActive ? "green" : "gray";
-    }
-    return "gray";
+    // Handle enabled boolean format
+    return resource.enabled ? "green" : "gray";
   };
 
   return (
@@ -371,7 +350,7 @@ export const Resources = () => {
                       </Box>
                       <Box w="120px">
                         <Text fontSize="sm">
-                          {activeTab === "storage" ? (resource.hostname || resource.storage) : (resource.hostname || resource.compute)}
+                          {resource.hostName}
                         </Text>
                       </Box>
                       <Box w="120px">
@@ -390,8 +369,7 @@ export const Resources = () => {
                           color="white"
                           bg={`${getStatusColor(resource)}.500`}
                         >
-                          {typeof resource.status === 'string' ? resource.status : 
-                           (resource.isActive ? 'Active' : 'Inactive')}
+                          {resource.enabled ? 'Active' : 'Inactive'}
                         </Box>
                       </Box>
                       <Box w="200px">

@@ -16,7 +16,6 @@ import {
 } from '@chakra-ui/react';
 import { ItemCard } from '../common/ItemCard';
 import { adminApiService } from '../../lib/adminApi';
-import { researchApiService } from '../../lib/researchApi';
 
 interface SearchItem {
   id: number;
@@ -26,7 +25,7 @@ interface SearchItem {
   authors: string[];
   starCount: number;
   category: string;
-  type: 'dataset' | 'compute' | 'storage' | 'code';
+  type: 'dataset' | 'compute' | 'storage';
 }
 
 const SearchResults: React.FC = () => {
@@ -46,7 +45,6 @@ const SearchResults: React.FC = () => {
 
   const filterOptions = [
     { key: 'datasets', label: 'Datasets', icon: '📊' },
-    { key: 'code', label: 'Code', icon: '💻' },
     { key: 'compute', label: 'Compute Resources', icon: '🖥️' },
     { key: 'storage', label: 'Storage Resources', icon: '💾' },
     { key: 'authors', label: 'Authors', icon: '👤' }
@@ -70,10 +68,6 @@ const SearchResults: React.FC = () => {
           console.error('Datasets search failed:', err);
           return [];
         }),
-        researchApiService.searchCodes(query).catch(err => {
-          console.error('Code search failed:', err);
-          return [];
-        }),
         adminApiService.searchComputeResources(query).catch(err => {
           console.error('Compute resources search failed:', err);
           return [];
@@ -84,23 +78,16 @@ const SearchResults: React.FC = () => {
         })
       ];
 
-      const [datasets, codes, computeResources, storageResources] = await Promise.all(promises);
+      const [datasets, computeResources, storageResources] = await Promise.all(promises);
 
       console.log('Search results:', {
         datasets: datasets.length,
-        codes: codes.length,
         computeResources: computeResources.length,
         storageResources: storageResources.length
       });
 
       const allResults: SearchItem[] = [
         ...datasets.map((item: any) => ({ ...item, type: 'dataset' as const })),
-        ...codes.map((item: any) => ({ 
-          ...item, 
-          type: 'code' as const,
-          title: item.name,
-          category: item.codeType || 'general'
-        })),
         ...computeResources.map((item: any) => ({ 
           ...item, 
           type: 'compute' as const,
@@ -159,8 +146,6 @@ const SearchResults: React.FC = () => {
       switch (filter) {
         case 'datasets':
           return result.type === 'dataset';
-        case 'code':
-          return result.type === 'code';
         case 'compute':
           return result.type === 'compute';
         case 'storage':
@@ -293,7 +278,6 @@ const SearchResults: React.FC = () => {
             </Text>
 
             {renderResultSection('dataset', 'Datasets', getResultsByType('dataset'))}
-            {renderResultSection('code', 'Code', getResultsByType('code'))}
             {renderResultSection('compute', 'Compute Resources', getResultsByType('compute'))}
             {renderResultSection('storage', 'Storage Resources', getResultsByType('storage'))}
 

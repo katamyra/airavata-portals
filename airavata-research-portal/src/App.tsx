@@ -25,7 +25,6 @@ import {Datasets} from "./components/datasets";
 import ResourceDetails from "./components/resources/ResourceDetails";
 import Notebooks from "./components/notebooks";
 import Repositories from "./components/repositories";
-import {Codes} from "./components/codes";
 import {Login} from "./components/auth/UserLoginPage";
 import {Signup} from "./components/auth/SignupPage";
 import {OAuthCallback} from "./components/auth/OAuthCallback";
@@ -54,12 +53,10 @@ import {DatasetDetail} from "./components/datasets/DatasetDetail";
 import {ModelDetail} from "./components/models/ModelDetail";
 import {NotebookDetail} from "./components/notebooks/NotebookDetail";
 import {RepositoryDetail} from "./components/repositories/RepositoryDetail";
-import {CodeDetail} from "./components/codes/CodeDetail";
 import {AddComputeResourceForm} from "./components/resources/AddComputeResourceForm";
 import {AddStorageResourceForm} from "./components/resources/AddStorageResourceForm";
 import {AddNotebookForm} from "./components/notebooks/AddNotebookForm";
 import {AddRepositoryForm} from "./components/repositories/AddRepositoryForm";
-import {AddCodeForm} from "./components/codes/AddCodeForm";
 
 function App() {
   const colorMode = useColorMode();
@@ -136,24 +133,18 @@ function App() {
               <Route path="/resources/notebooks" element={<Notebooks/>}/>
               <Route path="/resources/repositories" element={<Repositories/>}/>
               <Route path="/resources/models" element={<Models/>}/>
-              <Route path="/resources/codes" element={<Codes/>}/>
-              <Route path="/codes" element={<Codes/>}/>
               <Route path="/resources/models/new" element={<AddModelForm/>}/>
               <Route path="/resources/datasets/new" element={<AddDatasetForm/>}/>
               <Route path="/resources/datasets/:id" element={<DatasetDetail/>}/>
               <Route path="/resources/models/:id" element={<ModelDetail/>}/>
               <Route path="/resources/notebooks/:id" element={<NotebookDetail/>}/>
               <Route path="/resources/repositories/:id" element={<RepositoryDetail/>}/>
-              <Route path="/resources/codes/:id" element={<CodeDetail/>}/>
-              <Route path="/codes/:id" element={<CodeDetail/>}/>
               <Route path="/resources/compute/new" element={<AddComputeResourceForm/>}/>
               <Route path="/resources/compute/:id/edit" element={<AddComputeResourceForm/>}/>
               <Route path="/resources/storage/new" element={<AddStorageResourceForm/>}/>
               <Route path="/resources/storage/:id/edit" element={<AddStorageResourceForm/>}/>
               <Route path="/resources/notebooks/new" element={<AddNotebookForm/>}/>
               <Route path="/resources/repositories/new" element={<AddRepositoryForm/>}/>
-              <Route path="/resources/codes/new" element={<AddCodeForm/>}/>
-              <Route path="/codes/new" element={<AddCodeForm/>}/>
               <Route path="/catalog" element={<Catalog/>}/>
               <Route path="/search" element={<SearchResults/>}/>
             </Route>
