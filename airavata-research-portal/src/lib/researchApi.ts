@@ -18,19 +18,46 @@
  */
 
 import axios, { AxiosInstance } from "axios";
+import { User } from 'oidc-client-ts';
+import { V2_API_URL } from './constants';
 
 // Research Service API configuration for v2 infrastructure resources
 const RESEARCH_API_BASE_URL = "http://localhost:8080"; // Airavata research-service port
 
+// User provider for authentication
+let getUser: (() => Promise<User | null>) | null = null;
+
+export const setV2UserProvider = (provider: () => Promise<User | null>) => {
+  getUser = provider;
+};
+
 // Create axios instance for research service API
 const researchApi: AxiosInstance = axios.create({
-  baseURL: `${RESEARCH_API_BASE_URL}/api/v2/rf`,
+  baseURL: V2_API_URL || `${RESEARCH_API_BASE_URL}/api/v2/rf`,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
   },
 });
+
+// Request interceptor for authentication
+researchApi.interceptors.request.use(
+  async (config) => {
+    if (getUser) {
+      const user = await getUser();
+      if (user) {
+        config.headers.Authorization = `Bearer ${user.access_token}`;
+        config.headers["X-Claims"] = JSON.stringify({
+          "userName": user.profile.email,
+          "gatewayID": "default",
+        });
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Response interceptor for error handling
 researchApi.interceptors.response.use(

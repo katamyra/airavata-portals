@@ -23,6 +23,31 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { unifiedApiService } from '../../lib/apiConfig';
 import { toaster } from '../ui/toaster';
 
+// Utility function to parse validation errors from backend
+const parseValidationError = (error: any): string => {
+  if (error.response?.data) {
+    const errorData = error.response.data;
+    
+    // Handle structured validation error messages from backend
+    if (typeof errorData === 'string' && errorData.includes('Validation failed:')) {
+      return errorData.replace('Validation failed: ', '');
+    }
+    
+    // Handle generic string error messages
+    if (typeof errorData === 'string') {
+      return errorData;
+    }
+    
+    // Handle object error responses
+    if (errorData.message) {
+      return errorData.message;
+    }
+  }
+  
+  // Fallback to error message
+  return error.message || 'An unexpected error occurred';
+};
+
 interface QueueFormData {
   queueName: string;
   queueDescription: string;
@@ -376,22 +401,17 @@ export const AddComputeResourceForm: React.FC = () => {
     ipAddresses: [''],
     description: '',
     sshUsername: '',
-    sshPort: 22,
-    authenticationMethod: 'SSH_KEY',
     sshKey: '',
+    
+    // Step 2 fields (backend sets defaults for these)
+    sshPort: '',
+    authenticationMethod: '',
     workingDirectory: '',
+    schedulerType: '',
+    dataMovementProtocol: '',
     
-    // Step 2 fields  
-    schedulerType: 'SLURM',
-    dataMovementProtocol: 'SCP',
-    
-    // Legacy fields for backend compatibility
+    // Backend compatibility fields (backend sets defaults)
     hostname: '',
-    computeType: 'HPC',
-    cpuCores: 128,
-    memoryGB: 256,
-    operatingSystem: 'Linux',
-    queueSystem: 'SLURM',
     additionalInfo: '',
     resourceManager: ''
   });
@@ -414,18 +434,13 @@ export const AddComputeResourceForm: React.FC = () => {
         description: resource.description || '',
         sshUsername: resource.sshUsername || '',
         sshPort: resource.sshPort || 22,
-        authenticationMethod: resource.authenticationMethod || 'SSH_KEY',
+        authenticationMethod: resource.authenticationMethod || '',
         sshKey: resource.sshKey || '',
         workingDirectory: resource.workingDirectory || '',
-        schedulerType: resource.schedulerType || 'SLURM',
-        dataMovementProtocol: resource.dataMovementProtocol || 'SCP',
-        // Legacy fields
+        schedulerType: resource.schedulerType || '',
+        dataMovementProtocol: resource.dataMovementProtocol || '',
+        // Backend compatibility fields
         hostname: resource.hostname || '',
-        computeType: resource.computeType || 'HPC',
-        cpuCores: resource.cpuCores || 128,
-        memoryGB: resource.memoryGB || 256,
-        operatingSystem: resource.operatingSystem || 'Linux',
-        queueSystem: resource.queueSystem || 'SLURM',
         additionalInfo: resource.additionalInfo || '',
         resourceManager: resource.resourceManager || ''
       });
@@ -522,14 +537,9 @@ export const AddComputeResourceForm: React.FC = () => {
         workingDirectory: formData.workingDirectory,
         schedulerType: formData.schedulerType,
         dataMovementProtocol: formData.dataMovementProtocol,
-        // Legacy fields for backend compatibility
-        computeType: 'HPC',
-        cpuCores: 128,
-        memoryGB: 256,
-        operatingSystem: 'Linux',
-        queueSystem: formData.schedulerType,
-        resourceManager: 'Research Computing Center',
-        additionalInfo: `SSH Access: ${formData.sshUsername}@hostname:${formData.sshPort}`,
+        // Backend sets defaults for these fields
+        resourceManager: formData.resourceManager,
+        additionalInfo: formData.additionalInfo,
         queues: queues
       };
 
@@ -559,7 +569,7 @@ export const AddComputeResourceForm: React.FC = () => {
       console.error(`Failed to ${isEditMode ? 'update' : 'create'} compute resource:`, error);
       toaster.create({
         title: "Error",
-        description: `Failed to ${isEditMode ? 'update' : 'create'} compute resource: ${error.response?.data || error.message}`,
+        description: `Failed to ${isEditMode ? 'update' : 'create'} compute resource: ${parseValidationError(error)}`,
         type: "error",
       });
     } finally {

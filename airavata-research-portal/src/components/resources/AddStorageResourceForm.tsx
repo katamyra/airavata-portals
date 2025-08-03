@@ -23,6 +23,31 @@ import { toaster } from '../ui/toaster';
 import { useNavigate, useParams } from 'react-router-dom';
 import { unifiedApiService } from '../../lib/apiConfig';
 
+// Utility function to parse validation errors from backend
+const parseValidationError = (error: any): string => {
+  if (error.response?.data) {
+    const errorData = error.response.data;
+    
+    // Handle structured validation error messages from backend
+    if (typeof errorData === 'string' && errorData.includes('Validation failed:')) {
+      return errorData.replace('Validation failed: ', '');
+    }
+    
+    // Handle generic string error messages
+    if (typeof errorData === 'string') {
+      return errorData;
+    }
+    
+    // Handle object error responses
+    if (errorData.message) {
+      return errorData.message;
+    }
+  }
+  
+  // Fallback to error message
+  return error.message || 'An unexpected error occurred';
+};
+
 export const AddStorageResourceForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -33,7 +58,8 @@ export const AddStorageResourceForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    storageType: 'S3', // S3 or SCP
+    // Backend sets default for storageType
+    storageType: '',
     // S3-specific fields
     endpoint: '',
     bucketName: '',
@@ -41,9 +67,9 @@ export const AddStorageResourceForm = () => {
     secretKey: '',
     // SCP-specific fields
     hostname: '',
-    port: 22,
+    port: '',
     username: '',
-    authenticationMethod: 'SSH_KEY',
+    authenticationMethod: '',
     sshKey: '',
     remotePath: '',
     // Common fields
@@ -125,31 +151,20 @@ export const AddStorageResourceForm = () => {
         additionalInfo: formData.additionalInfo.trim() || null
       };
 
-      // Add type-specific fields
+      // Add type-specific fields (backend sets capacity, encryption, etc. defaults)
       if (formData.storageType === 'S3') {
         storageResourceData.endpoint = formData.endpoint.trim();
         storageResourceData.bucketName = formData.bucketName.trim();
         storageResourceData.accessKey = formData.accessKey.trim();
         storageResourceData.secretKey = formData.secretKey.trim();
-        // Set defaults for S3
         storageResourceData.hostname = formData.endpoint.trim();
-        storageResourceData.accessProtocol = 'S3';
-        storageResourceData.capacityTB = 1000;
-        storageResourceData.supportsEncryption = true;
-        storageResourceData.supportsVersioning = true;
       } else if (formData.storageType === 'SCP') {
         storageResourceData.hostname = formData.hostname.trim();
-        storageResourceData.port = parseInt(formData.port.toString());
+        storageResourceData.port = parseInt(formData.port.toString()) || 22;
         storageResourceData.username = formData.username.trim();
         storageResourceData.authenticationMethod = formData.authenticationMethod;
         storageResourceData.sshKey = formData.sshKey.trim();
         storageResourceData.remotePath = formData.remotePath.trim();
-        // Set defaults for SCP
-        storageResourceData.endpoint = formData.hostname.trim();
-        storageResourceData.accessProtocol = 'SCP';
-        storageResourceData.capacityTB = 100;
-        storageResourceData.supportsEncryption = false;
-        storageResourceData.supportsVersioning = false;
       }
 
       console.log(`${isEditMode ? 'Updating' : 'Creating'} storage resource:`, storageResourceData);
@@ -178,7 +193,7 @@ export const AddStorageResourceForm = () => {
       console.error(`Failed to ${isEditMode ? 'update' : 'create'} storage resource:`, error);
       toaster.create({
         title: "Error",
-        description: `Failed to ${isEditMode ? 'update' : 'create'} storage resource: ${error.response?.data || error.message}`,
+        description: `Failed to ${isEditMode ? 'update' : 'create'} storage resource: ${parseValidationError(error)}`,
         type: "error",
       });
     } finally {
